@@ -1,0 +1,6 @@
+@LEX.Web_HostAddress = http://localhost:5232
+
+GET {{LEX.Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
