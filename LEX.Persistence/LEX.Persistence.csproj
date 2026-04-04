@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <Folder Include="Data\Migrations\" />
-    <Folder Include="Data\DbContexts\" />
     <Folder Include="Data\DataSeed\" />
     <Folder Include="Data\Configurations\" />
   </ItemGroup>
