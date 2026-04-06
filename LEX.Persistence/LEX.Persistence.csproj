@@ -28,8 +28,4 @@
     <ProjectReference Include="..\LEX.Service\LEX.Service.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Data\DataSeed\" />
-  </ItemGroup>
-
 </Project>

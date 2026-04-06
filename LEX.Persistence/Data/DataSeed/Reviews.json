@@ -1,0 +1,23 @@
+[
+  {
+    "Rating": 5,
+    "Comment": "Excellent",
+    "CreatedAt": "2026-04-01T12:00:00",
+    "CustomerId": 1,
+    "LawyerId": 1
+  },
+  {
+    "Rating": 4,
+    "Comment": "Very good",
+    "CreatedAt": "2026-04-02T12:00:00",
+    "CustomerId": 2,
+    "LawyerId": 2
+  },
+  {
+    "Rating": 3,
+    "Comment": "Average",
+    "CreatedAt": "2026-04-03T12:00:00",
+    "CustomerId": 3,
+    "LawyerId": 3
+  }
+]
