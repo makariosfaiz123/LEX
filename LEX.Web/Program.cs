@@ -1,4 +1,7 @@
 
+using LEX.Persistence.Data.Context;
+using Microsoft.EntityFrameworkCore;
+
 namespace LEX.Web
 {
     public class Program
@@ -15,7 +18,11 @@ namespace LEX.Web
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(); 
+            builder.Services.AddSwaggerGen();
+            // «· ’ÕÌÕ: »‰” Œœ„ <AppDbContext> „‘ (AppDbContext)
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+            );
 
             #endregion
 
