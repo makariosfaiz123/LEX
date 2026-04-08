@@ -1,0 +1,23 @@
+[
+  {
+    "CustomerId": 1,
+    "LawyerId": 2,
+    "Case_Type": 1,
+    "Description": "Need legal advice",
+    "Attached_Files": []
+  },
+  {
+    "CustomerId": 2,
+    "LawyerId": 1,
+    "Case_Type": 2,
+    "Description": "Property dispute",
+    "Attached_Files": []
+  },
+  {
+    "CustomerId": 3,
+    "LawyerId": 3,
+    "Case_Type": 1,
+    "Description": "Tax consultation",
+    "Attached_Files": []
+  }
+]

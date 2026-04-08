@@ -1,0 +1,17 @@
+[
+  {
+    "Lawyer_Id": 1,
+    "Document_Type": 1,
+    "Document_URL": "https://example.com/doc1.pdf"
+  },
+  {
+    "Lawyer_Id": 2,
+    "Document_Type": 2,
+    "Document_URL": "https://example.com/doc2.pdf"
+  },
+  {
+    "Lawyer_Id": 3,
+    "Document_Type": 3,
+    "Document_URL": "https://example.com/doc3.pdf"
+  }
+]

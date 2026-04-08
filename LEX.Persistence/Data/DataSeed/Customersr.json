@@ -1,0 +1,32 @@
+[
+  {
+    "Fname": "Ahmed",
+    "Lname": "Hassan",
+    "Email": "ahmed@gmail.com",
+    "Phone": "01011111111",
+    "Date_Of_Birth": "1995-06-15",
+    "gender": 1,
+    "Porfile_Image": "https://example.com/ahmed.jpg",
+    "Status": 1
+  },
+  {
+    "Fname": "Sara",
+    "Lname": "Ali",
+    "Email": "sara@gmail.com",
+    "Phone": "01022222222",
+    "Date_Of_Birth": "1998-03-20",
+    "gender": 2,
+    "Porfile_Image": "https://example.com/sara.jpg",
+    "Status": 1
+  },
+  {
+    "Fname": "Mina",
+    "Lname": "George",
+    "Email": "mina@gmail.com",
+    "Phone": "01033333333",
+    "Date_Of_Birth": "1992-11-05",
+    "gender": 1,
+    "Porfile_Image": "https://example.com/mina.jpg",
+    "Status": 2
+  }
+]
