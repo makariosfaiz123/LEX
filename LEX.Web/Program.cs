@@ -11,7 +11,7 @@ namespace LEX.Web
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-           
+
 
             // Add services to the container.
 
@@ -23,7 +23,7 @@ namespace LEX.Web
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-          builder.Services.AddScoped<DataSeeding,DataSeeding>();
+            builder.Services.AddScoped<DataSeeding, DataSeeding>();
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
             );
@@ -39,7 +39,7 @@ namespace LEX.Web
 
             #endregion
 
-            #endregion
+
 
             // Configure the HTTP request pipeline.
             #region Configure the HTTP request pipeline
@@ -55,7 +55,7 @@ namespace LEX.Web
             //app.UseAuthorization();
 
 
-            app.MapControllers(); 
+            app.MapControllers();
             #endregion
 
             app.Run();

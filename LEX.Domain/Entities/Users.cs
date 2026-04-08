@@ -26,6 +26,7 @@ namespace LEX.Domain.Entities
 
         public string? Porfile_Image { get; set; }
         public Status Status { get; set; }
+        public RoleS RoleS { get; set; }
 
     }
 
