@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LEX.Persistence.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -24,7 +24,8 @@ namespace LEX.Persistence.Data.Migrations
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Date_Of_Birth = table.Column<DateOnly>(type: "date", nullable: false),
                     Porfile_Image = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false)
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    RoleS = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -46,7 +47,8 @@ namespace LEX.Persistence.Data.Migrations
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Date_Of_Birth = table.Column<DateOnly>(type: "date", nullable: false),
-                    Porfile_Image = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Porfile_Image = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RoleS = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

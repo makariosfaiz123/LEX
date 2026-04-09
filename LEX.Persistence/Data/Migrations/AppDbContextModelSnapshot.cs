@@ -85,6 +85,9 @@ namespace LEX.Persistence.Data.Migrations
                     b.Property<string>("Porfile_Image")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("RoleS")
+                        .HasColumnType("int");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -149,6 +152,9 @@ namespace LEX.Persistence.Data.Migrations
 
                     b.Property<string>("Porfile_Image")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RoleS")
+                        .HasColumnType("int");
 
                     b.Property<int>("Specialization")
                         .HasColumnType("int");
