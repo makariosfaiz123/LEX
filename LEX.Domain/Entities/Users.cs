@@ -1,4 +1,5 @@
 ﻿using LEX.Domain.EnumS;
+using LEX.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,7 +11,7 @@ using System.Xml.Linq;
 
 namespace LEX.Domain.Entities
 {
-    public class Users
+    public class Users : IEntity<int>
     {
         [Key]
         public int User_Id { get; set; }
