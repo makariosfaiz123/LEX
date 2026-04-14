@@ -33,7 +33,7 @@ namespace LEX.Web
             var app = builder.Build();
             #region Dataseeding
 
-            using var scope = app.Services.CreateScope();
+            await using var scope = app.Services.CreateAsyncScope();
             var objectsToSeed = scope.ServiceProvider.GetRequiredService<DataSeeding>();
             await objectsToSeed.DataSeed();
 
