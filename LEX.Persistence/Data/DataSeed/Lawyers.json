@@ -8,6 +8,7 @@
     "gender": 1,
     "Porfile_Image": "https://example.com/l1.jpg",
     "Status": 1,
+    "RoleS": 3,
     "Start_Practice": "2010-05-01",
     "Specialization": 2
   },
@@ -20,6 +21,7 @@
     "gender": 1,
     "Porfile_Image": "https://example.com/l2.jpg",
     "Status": 1,
+    "RoleS": 3,
     "Start_Practice": "2015-03-10",
     "Specialization": 4
   },
@@ -32,6 +34,7 @@
     "gender": 1,
     "Porfile_Image": "https://example.com/l3.jpg",
     "Status": 0,
+    "RoleS": 3,
     "Start_Practice": "2012-08-20",
     "Specialization": 16
   }
