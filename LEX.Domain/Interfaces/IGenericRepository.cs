@@ -14,9 +14,11 @@ namespace LEX.Domain.Interfaces
         Task AddAsync(TEntity entity);
         void Update(TEntity entity);
         void Delete(TEntity entity);
-        Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
-        Task<IEnumerable<TEntity>> GetPagedAsync(int page, int pageSize);
-        Task<IEnumerable<TEntity>> GetAllWithIncludesAsync(params Expression<Func<TEntity, object>>[] includes);
-        Task<IEnumerable<TEntity>> GetAllOrderedAsync(Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy);
+        Task<IEnumerable<TEntity>> GetAsync(
+        Expression<Func<TEntity, bool>>? filter = null,
+        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+        int? page = null,
+        int? pageSize = null,
+        params Expression<Func<TEntity, object>>[] includes);
     }
 }
