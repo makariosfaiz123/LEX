@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LEX.Persistence.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260406175508_initial")]
-    partial class initial
+    [Migration("20260416214316_MakePasswordNullable")]
+    partial class MakePasswordNullable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -81,12 +81,18 @@ namespace LEX.Persistence.Data.Migrations
                     b.Property<string>("Lname")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Porfile_Image")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RoleS")
+                        .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -146,12 +152,18 @@ namespace LEX.Persistence.Data.Migrations
                     b.Property<string>("Lname")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Porfile_Image")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RoleS")
+                        .HasColumnType("int");
 
                     b.Property<int>("Specialization")
                         .HasColumnType("int");
