@@ -36,6 +36,9 @@ namespace LEX.Service.Authentication
             if (existingUser != null)
                 return "Email already exists";
 
+            if (dto.DateOfBirth >= DateOnly.FromDateTime(DateTime.Now))
+                return "Invalid Date of Birth";
+
             // Hash Password
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 

@@ -36,7 +36,7 @@ namespace LEX.Shared.DTOs.AuthenticationRegister
         public RoleS Role { get; set; }
 
         [Required]
-        public DateTime DateOfBirth { get; set; }
+        public DateOnly DateOfBirth { get; set; }
 
         [Required]
         public Gender Gender { get; set; }

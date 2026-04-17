@@ -23,7 +23,7 @@ namespace LEX.Domain.Entities
         public string? Email { get; set; }
         [Phone]
         public string? Phone { get; set; }
-        public DateTime Date_Of_Birth { get; set; }
+        public DateOnly Date_Of_Birth { get; set; }
 
         public string? Porfile_Image { get; set; }
         public Status Status { get; set; }
