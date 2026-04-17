@@ -29,6 +29,9 @@ namespace LEX.Domain.Entities
         public Status Status { get; set; }
         public RoleS RoleS { get; set; }
         public string? PasswordHash { get; set; }
+        public string? OtpCode { get; set; }
+        public DateTime? OtpExpiry { get; set; }
+        public bool IsVerified { get; set; } = false;
 
     }
 
