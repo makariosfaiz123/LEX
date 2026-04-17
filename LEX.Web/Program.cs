@@ -3,7 +3,7 @@ using LEX.Domain.Interfaces;
 using LEX.Persistence.Data.Context;
 using LEX.Persistence.Data.DataSeed;
 using LEX.Persistence.Repositories;
-using LEX.Service;
+using LEX.Service.Authentication;
 using LEX.Service_Abstraction.Authentication;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
