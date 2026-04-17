@@ -6,6 +6,7 @@ using LEX.Persistence.Repositories;
 using LEX.Service.Authentication;
 using LEX.Service.Security;
 using LEX.Service_Abstraction.Authentication;
+using LEX.Service_Abstraction.IAuthentication;
 using LEX.Service_Abstraction.ISecurity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -75,7 +76,7 @@ namespace LEX.Web
             // Services
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<ITokenService, TokenService>();
-
+            builder.Services.AddScoped<IEmailService, EmailService>();
 
             //Authorization
             builder.Services.AddAuthentication(options =>

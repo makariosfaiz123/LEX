@@ -1,5 +1,6 @@
 ﻿using LEX.Shared.DTOs.AuthenticationLogin;
 using LEX.Shared.DTOs.AuthenticationRegister;
+using LEX.Shared.DTOs.EmailOTP;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,6 @@ namespace LEX.Service_Abstraction.Authentication
     {
         Task<AuthResponseDto?> LoginAsync(LoginDto dto);
         Task<string> RegisterAsync(RegisterDto dto);
+        Task<string> VerifyOtpAsync(VerifyOtpDto dto);
     }
 }
