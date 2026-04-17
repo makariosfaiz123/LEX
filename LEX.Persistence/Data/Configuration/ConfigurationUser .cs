@@ -25,11 +25,11 @@ namespace LEX.Persistence.Data.Configuration
                    .HasMaxLength(50);
 
             builder.Property(u => u.Email)
-                   .IsRequired();
+                   .IsRequired()
+                   .HasMaxLength(100);
 
-            builder.Property(u => u.Email)
-            .IsRequired()
-            .HasMaxLength(100);
+            builder.HasIndex(u => u.Email)
+                   .IsUnique();
 
             builder.Property(u => u.Phone)
             .HasMaxLength(15);
