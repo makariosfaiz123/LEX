@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LEX.Service
+namespace LEX.Service.Authentication
 {
     public class AuthService : IAuthService
     {
