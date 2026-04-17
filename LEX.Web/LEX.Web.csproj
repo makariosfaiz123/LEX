@@ -19,8 +19,4 @@
     <ProjectReference Include="..\LEX.Presentation\LEX.Presentation.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
 </Project>

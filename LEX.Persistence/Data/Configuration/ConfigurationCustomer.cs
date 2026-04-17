@@ -16,12 +16,12 @@ namespace LEX.Domain.Configuration
            builder.HasMany(c => c.Case_Requests)
                 .WithOne(cr => cr.Customer)
                 .HasForeignKey(cr => cr.CustomerId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(c => c.Reviews)
                 .WithOne(r => r.Customer)
                 .HasForeignKey(r => r.CustomerId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

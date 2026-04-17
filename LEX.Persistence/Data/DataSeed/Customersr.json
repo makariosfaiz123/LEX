@@ -7,7 +7,8 @@
     "Date_Of_Birth": "1995-06-15",
     "gender": 1,
     "Porfile_Image": "https://example.com/ahmed.jpg",
-    "Status": 1
+    "Status": 1,
+    "RoleS": 2
   },
   {
     "Fname": "Sara",
@@ -17,7 +18,8 @@
     "Date_Of_Birth": "1998-03-20",
     "gender": 2,
     "Porfile_Image": "https://example.com/sara.jpg",
-    "Status": 1
+    "Status": 1,
+    "RoleS": 2
   },
   {
     "Fname": "Mina",
@@ -27,6 +29,7 @@
     "Date_Of_Birth": "1992-11-05",
     "gender": 1,
     "Porfile_Image": "https://example.com/mina.jpg",
-    "Status": 2
+    "Status": 2,
+    "RoleS": 2
   }
 ]

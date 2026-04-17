@@ -27,6 +27,7 @@ namespace LEX.Persistence.Data.Context
 
         }
 
+        public DbSet<Users> Users { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Lawyer> Lawyers { get; set; }
         public DbSet<CaseRequests> CaseRequests { get; set; }

@@ -20,6 +20,6 @@ namespace LEX.Domain.Entities
         public DateOnly Start_Practice { get; set; }
 
         public Specializations Specialization { get; set; }
-        public Status Status { get; set; } = Status.Waiting;
+        //public Status Status { get; set; } = Status.Waiting;
     }
 }

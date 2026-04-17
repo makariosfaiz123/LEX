@@ -17,17 +17,17 @@ namespace LEX.Domain.Configuration
                  .WithOne(cr => cr.Lawyer)
 
                  .HasForeignKey(cr => cr.LawyerId)
-                 .OnDelete(DeleteBehavior.Cascade);
+                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(l => l.Documents)
                 .WithOne(d => d.Lawyer)
                 .HasForeignKey(d => d.Lawyer_Id)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(l => l.Reviews)
                 .WithOne(r => r.Lawyer)
                 .HasForeignKey(r => r.LawyerId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 
