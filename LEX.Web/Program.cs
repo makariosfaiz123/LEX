@@ -1,6 +1,10 @@
 
+using LEX.Domain.Interfaces;
 using LEX.Persistence.Data.Context;
 using LEX.Persistence.Data.DataSeed;
+using LEX.Persistence.Repositories;
+using LEX.Service;
+using LEX.Service_Abstraction.Authentication;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
@@ -27,6 +31,19 @@ namespace LEX.Web
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
             );
+
+            // AutoMapper
+            builder.Services.AddAutoMapper(typeof(AuthService).Assembly);
+
+
+            //Unit of Work
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+            // Services
+            builder.Services.AddScoped<IAuthService, AuthService>();
+
+
+
 
             #endregion
 
