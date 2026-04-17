@@ -1,4 +1,5 @@
-﻿using LEX.Shared.DTOs.AuthenticationRegister;
+﻿using LEX.Shared.DTOs.AuthenticationLogin;
+using LEX.Shared.DTOs.AuthenticationRegister;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace LEX.Service_Abstraction.Authentication
 {
     public interface IAuthService
     {
-        //Task<string> LoginAsync(string email, string password);
+        Task<AuthResponseDto?> LoginAsync(LoginDto dto);
         Task<string> RegisterAsync(RegisterDto dto);
     }
 }
