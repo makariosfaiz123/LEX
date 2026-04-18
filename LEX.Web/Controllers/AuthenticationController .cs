@@ -1,4 +1,5 @@
 ﻿using LEX.Service_Abstraction.Authentication;
+using LEX.Shared.DTOs.AuthenticationForgotPassword;
 using LEX.Shared.DTOs.AuthenticationLogin;
 using LEX.Shared.DTOs.AuthenticationRegister;
 using LEX.Shared.DTOs.EmailOTP;
@@ -53,6 +54,28 @@ namespace LEX.Web.Controllers
             var result = await _authService.VerifyOtpAsync(dto);
 
             if (result != "Email verified successfully")
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+        {
+            var result = await _authService.ForgotPasswordAsync(dto);
+
+            if (result != "OTP sent to your email")
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+        {
+            var result = await _authService.ResetPasswordAsync(dto);
+
+            if (result != "Password reset successfully")
                 return BadRequest(result);
 
             return Ok(result);

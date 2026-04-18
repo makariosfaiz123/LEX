@@ -5,6 +5,7 @@ using LEX.Domain.Interfaces;
 using LEX.Service_Abstraction.Authentication;
 using LEX.Service_Abstraction.IAuthentication;
 using LEX.Service_Abstraction.ISecurity;
+using LEX.Shared.DTOs.AuthenticationForgotPassword;
 using LEX.Shared.DTOs.AuthenticationLogin;
 using LEX.Shared.DTOs.AuthenticationRegister;
 using LEX.Shared.DTOs.EmailOTP;
@@ -250,6 +251,78 @@ namespace LEX.Service.Authentication
         {
             var random = new Random();
             return random.Next(100000, 999999).ToString();
+        }
+
+        public async Task<string> ForgotPasswordAsync(ForgotPasswordDto dto)
+        {
+            var userRepo = _unitOfWork.GetRepository<Users, int>();
+
+            var user = (await userRepo.GetAsync(u => u.Email == dto.Email))
+                       .FirstOrDefault();
+
+            if (user == null)
+                return "User not found";
+
+            if (!user.IsVerified)
+                return "Email not verified";
+
+            var otp = GenerateOtp();
+            user.OtpCode = otp;
+            user.OtpExpiry = DateTime.UtcNow.AddMinutes(5);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            var body = $@"
+                <html>
+                <body style='font-family: Arial; background-color: #f4f4f4; padding: 20px;'>
+                    <div style='max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; text-align: center;'>
+                        <h2 style='color: #2c3e50;'>LEX ⚖️</h2>
+                        <p>Password Reset Code:</p>
+                        <div style='font-size: 30px; font-weight: bold;'>{otp}</div>
+                        <p>Expires in 5 minutes</p>
+                    </div>
+                </body>
+                </html>";
+
+            await _emailService.SendEmailAsync(
+                user.Email,
+                "LEX - Reset Password OTP",
+                body
+            );
+
+            return "OTP sent to your email";
+        }
+
+        public async Task<string> ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            var userRepo = _unitOfWork.GetRepository<Users, int>();
+
+            var user = (await userRepo.GetAsync(u => u.Email == dto.Email))
+                       .FirstOrDefault();
+
+            if (user == null)
+                return "User not found";
+
+            if (!user.IsVerified)
+                return "Email not verified";
+
+            //Validate OTP
+            if (!string.Equals(user.OtpCode?.Trim(), dto.OtpCode?.Trim()))
+                return "Invalid OTP";
+
+            if (user.OtpExpiry == null || user.OtpExpiry < DateTime.UtcNow)
+                return "OTP expired";
+
+            //Update Password
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+
+            //Clear OTP
+            user.OtpCode = null;
+            user.OtpExpiry = null;
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return "Password reset successfully";
         }
 
     }
