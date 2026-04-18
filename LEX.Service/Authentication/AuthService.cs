@@ -41,6 +41,38 @@ namespace LEX.Service.Authentication
             if (existingUser != null && existingUser.IsVerified)
                 return "Email already exists";
 
+            // 🔁 لو موجود بس مش مفعل → ابعت OTP تاني
+            string otp;
+            if (existingUser != null && !existingUser.IsVerified)
+            {
+                 otp = GenerateOtp();
+
+                existingUser.OtpCode = otp;
+                existingUser.OtpExpiry = DateTime.UtcNow.AddMinutes(5);
+
+                await _unitOfWork.SaveChangesAsync();
+
+                var resendBody = $@"
+                    <html>
+                    <body style='font-family: Arial; background-color: #f4f4f4; padding: 20px;'>
+                        <div style='max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; text-align: center;'>
+                            <h2 style='color: #2c3e50;'>LEX ⚖️</h2>
+                            <p>Your new OTP code:</p>
+                            <div style='font-size: 30px; font-weight: bold;'>{otp}</div>
+                            <p>Expires in 5 minutes</p>
+                        </div>
+                    </body>
+                    </html>";
+
+                await _emailService.SendEmailAsync(
+                    existingUser.Email,
+                    "LEX - OTP Resend",
+                    resendBody
+                );
+
+                return "OTP sent again. Check your email.";
+            }
+
             if (dto.DateOfBirth >= DateOnly.FromDateTime(DateTime.Now))
                 return "Invalid Date of Birth";
 
@@ -93,12 +125,11 @@ namespace LEX.Service.Authentication
             }
 
             //OTP Email
-            var otp = GenerateOtp();
+             otp = GenerateOtp();
 
             user.OtpCode = otp;
             user.OtpExpiry = DateTime.UtcNow.AddMinutes(5);
             user.IsVerified = false;
-
 
 
             await userRepo.AddAsync(user);
@@ -106,11 +137,45 @@ namespace LEX.Service.Authentication
             await _unitOfWork.SaveChangesAsync();
 
             //OTP Email
+            var body = $@"
+                <html>
+                <body style='font-family: Arial; background-color: #f4f4f4; padding: 20px;'>
+
+                    <div style='max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; text-align: center;'>
+
+                        <h2 style='color: #2c3e50;'>LEX ⚖️</h2>
+
+                        <p style='font-size: 16px; color: #555;'>
+                            Welcome! Please use the verification code below:
+                        </p>
+
+                        <div style='font-size: 30px; font-weight: bold; letter-spacing: 5px; 
+                                    background: #f1f1f1; padding: 15px; margin: 20px 0; border-radius: 8px;'>
+                            {otp}
+                        </div>
+
+                        <p style='color: #888; font-size: 14px;'>
+                            This code will expire in 5 minutes.
+                        </p>
+
+                        <hr />
+
+                        <p style='font-size: 12px; color: #aaa;'>
+                            If you didn’t request this, you can ignore this email.
+                        </p>
+
+                    </div>
+
+                </body>
+                </html>
+                ";
+
+            // 📧 Send Email
             await _emailService.SendEmailAsync(
-                    user.Email,
-                    "Your OTP Code",
-                    $"Your OTP is: {otp}"
-                );
+                user.Email,
+                "LEX - OTP Verification",
+                body
+            );
 
             return "User Registered. Check your email for OTP.";
         }
@@ -152,15 +217,18 @@ namespace LEX.Service.Authentication
             if (user == null)
                 return "User not found";
 
+            if (user.IsVerified)
+                return "Already verified";
 
             if (!string.Equals(user.OtpCode?.Trim(), dto.OtpCode?.Trim()))
                 return "Invalid OTP";
 
-            if (user.OtpExpiry < DateTime.UtcNow)
+            if (user.OtpExpiry == null || user.OtpExpiry < DateTime.UtcNow)
                 return "OTP expired";
 
             user.IsVerified = true;
             user.OtpCode = null;
+            user.OtpExpiry = null;
 
             await _unitOfWork.SaveChangesAsync();
 
