@@ -16,7 +16,7 @@ namespace LEX.Domain.Entities
         [MaxLength(500)]
         public string? Comment { get; set; }
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Foreign Keys
         [Required]

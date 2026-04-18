@@ -10,7 +10,7 @@ namespace LEX.Domain.Entities
     public class Lawyer : Users
     {
         #region (RS)
-        public ICollection<CaseRequests> Case_Requests { get; set; } = [];
+        public ICollection<CaseRequest> Case_Requests { get; set; } = [];
         public ICollection<Documents> Documents { get; set; } = [];
         public ICollection<Review> Reviews { get; set; } = [];
 

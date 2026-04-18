@@ -19,8 +19,9 @@ namespace LEX.Domain.Entities
         public Gender gender { get; set; }
         public string? Fname { get; set; }
         public string? Lname { get; set; }
+        [Required]
         [EmailAddress]
-        public string? Email { get; set; }
+        public string Email { get; set; }
         [Phone]
         public string? Phone { get; set; }
         public DateOnly Date_Of_Birth { get; set; }
@@ -28,7 +29,7 @@ namespace LEX.Domain.Entities
         public string? Porfile_Image { get; set; }
         public Status Status { get; set; }
         public RoleS RoleS { get; set; }
-        public string? PasswordHash { get; set; }
+        public string PasswordHash { get; set; }
         public string? OtpCode { get; set; }
         public DateTime? OtpExpiry { get; set; }
         public bool IsVerified { get; set; } = false;
