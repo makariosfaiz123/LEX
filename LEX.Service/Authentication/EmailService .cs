@@ -1,4 +1,4 @@
-﻿using LEX.Service_Abstraction.IAuthentication;
+using LEX.Service_Abstraction.IAuthentication;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +16,21 @@ namespace LEX.Service.Authentication
             var smtp = new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
-                Credentials = new NetworkCredential("makariosfaiz2121@gmail.com", "hzgmhtbrlysrexbg"),
+                Credentials = new NetworkCredential("makariosfaiz423@gmail.com", "dknyyxjiepdycszq"),
                 EnableSsl = true
             };
-            
-            var message = new MailMessage("YOUR_EMAIL@gmail.com", to, subject, body);
+
+
+
+            var message = new MailMessage
+            {
+                From = new MailAddress("YOUR_EMAIL@gmail.com", "LEX Support"),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = true,
+            };
+
+            message.To.Add(to);
 
             await smtp.SendMailAsync(message);
         }
