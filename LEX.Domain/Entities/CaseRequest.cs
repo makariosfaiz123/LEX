@@ -1,4 +1,5 @@
 ﻿using LEX.Domain.EnumS;
+using LEX.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,20 +10,18 @@ using System.Threading.Tasks;
 
 namespace LEX.Domain.Entities
 {
-    public class CaseRequest
+    public class CaseRequest : IEntity<int>
     {
         [Key]
-        public int Case_Id { get; set; }
+        public int Id { get; set; }
 
         public int CustomerId { get; set; }
         public Customer Customer { get; set; }
 
-        public int? LawyerId { get; set; }
-        public Lawyer? Lawyer { get; set; }
+        public int LawyerId { get; set; }
+        public Lawyer Lawyer { get; set; }
 
         public CaseType Case_Type { get; set; }
-
-        public Specializations Category { get; set; }
 
         [Required]
         public string Description { get; set; }

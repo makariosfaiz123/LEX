@@ -3,6 +3,7 @@ using LEX.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -14,7 +15,8 @@ namespace LEX.Domain.Entities
     public class Users : IEntity<int>
     {
         [Key]
-        public int User_Id { get; set; }
+        [Column("User_Id")]
+        public int Id { get; set; }
 
         public Gender gender { get; set; }
         public string? Fname { get; set; }
