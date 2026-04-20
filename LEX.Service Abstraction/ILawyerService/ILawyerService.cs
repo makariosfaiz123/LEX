@@ -14,5 +14,6 @@ namespace LEX.Service_Abstraction.ILawyerService
         Task<ServiceResponse<List<LawyerDto>>> GetLawyersAsync(LawyerFilterDto filter);
 
         Task<ServiceResponse<List<SpecializationDto>>> GetSpecializationsAsync();
+        Task<ServiceResponse<LawyerDetailsDto>> GetLawyerDetailsAsync(int lawyerId);
     }
 }

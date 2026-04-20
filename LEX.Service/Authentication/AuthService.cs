@@ -2,6 +2,7 @@ using BCrypt.Net;
 using LEX.Domain.Entities;
 using LEX.Domain.EnumS;
 using LEX.Domain.Interfaces;
+using LEX.Service.Helpers;
 using LEX.Service_Abstraction.Authentication;
 using LEX.Service_Abstraction.IAuthentication;
 using LEX.Service_Abstraction.ISecurity;
@@ -104,8 +105,23 @@ namespace LEX.Service.Authentication
             }
             else if (dto.Role == RoleS.Lawyer)
             {
-                if (dto.StartPractice == null || dto.Specialization == null)
+                if (dto.StartPractice == null || dto.Specializations == null || !dto.Specializations.Any())
                     return "Lawyer data is incomplete";
+
+                // 🔥 Validation
+                if (dto.Specializations.Count > 2)
+                    return "Maximum 2 specializations allowed";
+
+                // 🔥 Convert List → Flags
+                Specializations specs = Specializations.None;
+
+                foreach (var spec in dto.Specializations)
+                {
+                    if (!EnumHelper.TryParseEnum<Specializations>(spec, out var parsed))
+                        return $"Invalid specialization: {spec}";
+
+                    specs |= parsed;
+                }
 
                 user = new Lawyer
                 {
@@ -120,7 +136,7 @@ namespace LEX.Service.Authentication
                     RoleS = RoleS.Lawyer,
                     Status = Status.Waiting,
                     Start_Practice = dto.StartPractice.Value,
-                    Specialization = dto.Specialization.Value,
+                    Specialization = specs,
                 };
             }
             else

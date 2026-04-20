@@ -38,5 +38,16 @@ namespace LEX.Web.Controllers
             return Ok(result);
         }
 
+
+        [HttpGet("Details/{id}")]
+        public async Task<IActionResult> GetLawyerDetails(int id)
+        {
+            var result = await _lawyerService.GetLawyerDetailsAsync(id);
+
+            if (!result.Success)
+                return NotFound(result);
+
+            return Ok(result);
+        }
     }
 }

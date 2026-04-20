@@ -12,7 +12,7 @@ namespace LEX.Shared.DTOs.LawyerDtos
 
         public string Name { get; set; }
 
-        public string Specialization { get; set; }
+        public List<string> Specializations { get; set; } = new();
 
         public string? ProfileImage { get; set; }
 

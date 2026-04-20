@@ -17,10 +17,12 @@ namespace LEX.Service.LawyerService
     public class LawyerService : ILawyerService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ILawyerRepository _lawyerRepo;
 
-        public LawyerService(IUnitOfWork unitOfWork)
+        public LawyerService(IUnitOfWork unitOfWork, ILawyerRepository lawyerRepository)
         {
             _unitOfWork = unitOfWork;
+            _lawyerRepo = lawyerRepository;
         }
         public async Task<ServiceResponse<List<LawyerDto>>> GetLawyersAsync(LawyerFilterDto filter)
         {
@@ -38,7 +40,7 @@ namespace LEX.Service.LawyerService
                     return ServiceResponse<List<LawyerDto>>.Fail("Invalid specialization");
                 }
 
-                predicate = l => l.Specialization == specializationEnum;
+                predicate = l => l.Specialization.HasFlag(specializationEnum);
             }
 
             var lawyers = await lawyerRepo.GetAsync(predicate);
@@ -56,7 +58,7 @@ namespace LEX.Service.LawyerService
             {
                 Id = l.Id,
                 Name = $"{l.Fname} {l.Lname}",
-                Specialization = l.Specialization.ToString(),
+                Specializations = EnumHelper.GetSpecializationsList(l.Specialization),
                 ProfileImage = l.Porfile_Image,
 
                 Rating = 4.9, // مؤقت لحد ما نربط Reviews
@@ -73,17 +75,18 @@ namespace LEX.Service.LawyerService
 
             var lawyers = await lawyerRepo.GetAsync();
 
-            
-            var result = lawyers
-                .GroupBy(l => l.Specialization)
-                .Select(g => new SpecializationDto
+
+            var result = Enum.GetValues(typeof(Specializations))
+                .Cast<Specializations>()
+                .Where(s => s != Specializations.None)
+                .Select(s => new SpecializationDto
                 {
-                    Name = g.Key.ToString(),
-                    Count = g.Count()
+                    Name = s.ToString(),
+                    Count = lawyers.Count(l => l.Specialization.HasFlag(s))
                 })
                 .ToList();
 
-            
+
             result.Insert(0, new SpecializationDto
             {
                 Name = "All",
@@ -91,6 +94,49 @@ namespace LEX.Service.LawyerService
             });
 
             return ServiceResponse<List<SpecializationDto>>.SuccessResult(result);
+        }
+
+        public async Task<ServiceResponse<LawyerDetailsDto>> GetLawyerDetailsAsync(int lawyerId)
+        {
+            var lawyer = await _lawyerRepo.GetLawyerWithDetailsAsync(lawyerId);
+
+            if (lawyer == null)
+                return ServiceResponse<LawyerDetailsDto>.Fail("Lawyer not found");
+
+            // ⭐ Rating
+            double rating = 0;
+            int reviewsCount = lawyer.Reviews.Count;
+
+            if (reviewsCount > 0)
+                rating = lawyer.Reviews.Average(r => r.Rating);
+
+            var result = new LawyerDetailsDto
+            {
+                Id = lawyer.Id,
+                Name = $"{lawyer.Fname} {lawyer.Lname}",
+
+                Specializations = EnumHelper.GetSpecializationsList(lawyer.Specialization),
+
+                ProfileImage = lawyer.Porfile_Image,
+
+                Rating = Math.Round(rating, 1),
+                ReviewsCount = reviewsCount,
+
+                YearsOfExperience = DateTime.Now.Year - lawyer.Start_Practice.Year,
+
+                About = lawyer.About,
+                Education = lawyer.Education,
+
+                Reviews = lawyer.Reviews.Select(r => new ReviewDto
+                {
+                    CustomerName = $"{r.Customer.Fname} {r.Customer.Lname}",
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                    CreatedAt = r.CreatedAt
+                }).ToList()
+            };
+
+            return ServiceResponse<LawyerDetailsDto>.SuccessResult(result);
         }
 
 

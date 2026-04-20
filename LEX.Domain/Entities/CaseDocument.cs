@@ -11,7 +11,7 @@ namespace LEX.Domain.Entities
         public int Id { get; set; }
         public string FileUrl { get; set; }
 
-        public int CaseId { get; set; }
+        public int CaseRequestId { get; set; }
         public CaseRequest CaseRequest { get; set; }
     }
 }

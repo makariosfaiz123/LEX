@@ -70,8 +70,9 @@ namespace LEX.Web
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
             );
 
-            // AutoMapper
+            // AutoMapper && Repos
             builder.Services.AddAutoMapper(typeof(AuthService).Assembly);
+            builder.Services.AddScoped<ILawyerRepository, LawyerRepository>();
 
 
             //Unit of Work

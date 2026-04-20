@@ -49,11 +49,11 @@ namespace LEX.Web.Controllers
 
         [Authorize(Roles = "Lawyer")]
         [HttpGet("my-requests-Lawyer")]
-        public async Task<IActionResult> GetMyRequests()
+        public async Task<IActionResult> GetMyRequests([FromQuery] string? status)
         {
             var lawyerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
-            var result = await _caseService.GetRequestsForLawyerAsync(lawyerId);
+            var result = await _caseService.GetRequestsForLawyerAsync(lawyerId, status);
 
             if (!result.Success)
                 return BadRequest(result);

@@ -30,33 +30,35 @@ namespace LEX.Service.CaseRequests
 
             //Validate CaseType
             if (!EnumHelper.TryParseEnum<CaseType>(dto.CaseType, out var caseType))
-            {
                 return ServiceResponse<string>.Fail("Invalid CaseType");
-            }
+
+            if (string.IsNullOrWhiteSpace(dto.Description))
+                return ServiceResponse<string>.Fail("Description is required");
+
+            dto.Description = dto.Description.Trim();
+
+            if (dto.Description.Length < 10)
+                return ServiceResponse<string>.Fail("Description must be at least 10 characters");
 
             //Check Lawyer exists
             var lawyer = await lawyerRepo.GetByIdAsync(dto.LawyerId);
-            if (lawyer == null)
-            {
+            if (lawyer == null) 
                 return ServiceResponse<string>.Fail("Lawyer not found");
-            }
+            
 
             //Safety 
             if (dto.LawyerId == userId)
-            {
                 return ServiceResponse<string>.Fail("You can't assign case to yourself");
-            }
 
-            var existingCase = await caseRepo.GetAsync(c =>
+            //Check for existing pending cases
+            var hasPendingCase = (await caseRepo.GetAsync(c =>
                 c.CustomerId == userId &&
                 c.LawyerId == dto.LawyerId &&
                 c.Status == CaseStatus.Pending
-            );
+            )).Any();
 
-            if (existingCase.Any())
-            {
+            if (hasPendingCase)
                 return ServiceResponse<string>.Fail("You already sent a request to this lawyer");
-            }
 
             //Create Case
             var caseRequest = new CaseRequest
@@ -66,15 +68,13 @@ namespace LEX.Service.CaseRequests
                 Case_Type = caseType,
                 Description = dto.Description,
                 Status = CaseStatus.Pending,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Documents = dto.Documents?
+                    .Where(d => !string.IsNullOrWhiteSpace(d))
+                    .Select(doc => new CaseDocument { FileUrl = doc.Trim() })
+                    .ToList() ?? new List<CaseDocument>()
             };
-            if (dto.Documents != null && dto.Documents.Any())
-            {
-                caseRequest.Documents = dto.Documents.Select(doc => new CaseDocument
-                {
-                    FileUrl = doc
-                }).ToList();
-            }
+      
 
             await caseRepo.AddAsync(caseRequest);
             await _unitOfWork.SaveChangesAsync();
@@ -83,18 +83,28 @@ namespace LEX.Service.CaseRequests
         }
 
 
-        public async Task<ServiceResponse<List<LawyerCaseRequestDto>>> GetRequestsForLawyerAsync(int lawyerId)
+        public async Task<ServiceResponse<List<LawyerCaseRequestDto>>> GetRequestsForLawyerAsync(int lawyerId, string? status)
         {
             var caseRepo = _unitOfWork.GetRepository<CaseRequest, int>();
+            
+
+            Expression<Func<CaseRequest, bool>> filter = c => c.LawyerId == lawyerId;
+            if (!string.IsNullOrEmpty(status))
+            {
+                if (!EnumHelper.TryParseEnum<CaseStatus>(status, out var statusEnum))
+                    return ServiceResponse<List<LawyerCaseRequestDto>>.Fail("Invalid status");
+
+                filter = c => c.LawyerId == lawyerId && c.Status == statusEnum;
+            }
 
             var cases = await caseRepo.GetAsync(
-                    filter: c => c.LawyerId == lawyerId,
-                    includes: new Expression<Func<CaseRequest, object>>[]
-                    {
-                        c => c.Customer,
-                        c => c.Documents
-                    }
-                );
+                   filter,
+                   q => q.OrderByDescending(c => c.CreatedAt),
+                   null,
+                   null,
+                   c => c.Customer,
+                   c => c.Documents
+                 );
 
             var result = cases.Select(c => new LawyerCaseRequestDto
             {
@@ -154,12 +164,12 @@ namespace LEX.Service.CaseRequests
             var caseRepo = _unitOfWork.GetRepository<CaseRequest, int>();
 
             var cases = await caseRepo.GetAsync(
-                c => c.CustomerId == customerId,
-                null,
-                null,
-                null,
-                c => c.Lawyer
-            );
+                    c => c.CustomerId == customerId,
+                    orderBy: q => q.OrderByDescending(c => c.CreatedAt),
+                    null,
+                    null,
+                    c => c.Lawyer
+                );
 
             var result = cases.Select(c => new CustomerCaseDto
             {

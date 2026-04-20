@@ -25,6 +25,12 @@ namespace LEX.Persistence.Data.Context
         {
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
+            modelBuilder.Entity<CaseDocument>()
+                .HasOne(d => d.CaseRequest)
+                .WithMany(c => c.Documents)
+                .HasForeignKey(d => d.CaseRequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
 
         public DbSet<Users> Users { get; set; }

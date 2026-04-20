@@ -45,6 +45,6 @@ namespace LEX.Shared.DTOs.AuthenticationRegister
 
         // Lawyer only
         public DateOnly? StartPractice { get; set; }
-        public Specializations? Specialization { get; set; }
+        public List<string> Specializations { get; set; }
     }
 }

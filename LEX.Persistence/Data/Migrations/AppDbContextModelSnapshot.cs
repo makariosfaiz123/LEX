@@ -30,9 +30,6 @@ namespace LEX.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CaseId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CaseRequestId")
                         .HasColumnType("int");
 
@@ -222,6 +219,14 @@ namespace LEX.Persistence.Migrations
             modelBuilder.Entity("LEX.Domain.Entities.Lawyer", b =>
                 {
                     b.HasBaseType("LEX.Domain.Entities.Users");
+
+                    b.Property<string>("About")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Education")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Specialization")
                         .HasColumnType("int");

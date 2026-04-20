@@ -1,4 +1,5 @@
-﻿using LEX.Shared.DTOs.CaseRequest;
+﻿using LEX.Domain.EnumS;
+using LEX.Shared.DTOs.CaseRequest;
 using LEX.Shared.Responses;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace LEX.Service_Abstraction.CaseRequests
     {
         Task<ServiceResponse<string>> CreateCaseAsync(CreateCaseRequestDto dto, int userId);
 
-        Task<ServiceResponse<List<LawyerCaseRequestDto>>> GetRequestsForLawyerAsync(int lawyerId);
+        Task<ServiceResponse<List<LawyerCaseRequestDto>>> GetRequestsForLawyerAsync(int lawyerId,string? status);
 
         Task<ServiceResponse<string>> HandleCaseRequestAsync(int lawyerId, HandleCaseRequestDto dto);
 
