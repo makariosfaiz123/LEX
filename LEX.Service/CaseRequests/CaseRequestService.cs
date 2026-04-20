@@ -183,5 +183,38 @@ namespace LEX.Service.CaseRequests
             return ServiceResponse<List<CustomerCaseDto>>.SuccessResult(result);
         }
 
+        public async Task<ServiceResponse<CaseDetailsDto>> GetCaseDetailsForLawyerAsync(int caseId, int lawyerId)
+        {
+            var caseRepo = _unitOfWork.GetRepository<CaseRequest, int>();
+
+            var caseRequest = (await caseRepo.GetAsync(
+                c => c.Id == caseId && c.LawyerId == lawyerId,
+                null,
+                null,
+                null,
+                c => c.Customer,
+                c => c.Documents
+            )).FirstOrDefault();
+
+            if (caseRequest == null)
+                return ServiceResponse<CaseDetailsDto>.Fail("Case not found");
+
+            var result = new CaseDetailsDto
+            {
+                CaseId = caseRequest.Id,
+                ClientName = $"{caseRequest.Customer.Fname} {caseRequest.Customer.Lname}",
+                CaseType = caseRequest.Case_Type.ToString(),
+                Description = caseRequest.Description,
+                Status = caseRequest.Status.ToString(),
+                CreatedAt = caseRequest.CreatedAt,
+
+                Documents = caseRequest.Documents
+                    .Select(d => d.FileUrl)
+                    .ToList()
+            };
+
+            return ServiceResponse<CaseDetailsDto>.SuccessResult(result);
+        }
+
     }
 }

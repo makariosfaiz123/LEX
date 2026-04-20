@@ -85,5 +85,19 @@ namespace LEX.Web.Controllers
 
             return Ok(result);
         }
+
+        [Authorize(Roles = "Lawyer")]
+        [HttpGet("CaseDetailsFor-Lawyer/{id}")]
+        public async Task<IActionResult> GetCaseDetailsForLawyer(int id)
+        {
+            var lawyerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+            var result = await _caseService.GetCaseDetailsForLawyerAsync(id, lawyerId);
+
+            if (!result.Success)
+                return NotFound(result);
+
+            return Ok(result);
+        }
     }
 }
