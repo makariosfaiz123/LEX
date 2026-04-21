@@ -39,6 +39,7 @@ namespace LEX.Persistence.Data.Context
         public DbSet<CaseRequest> CaseRequests { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Documents> Documents { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
 
     }

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LEX.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,7 +32,9 @@ namespace LEX.Persistence.Migrations
                     IsVerified = table.Column<bool>(type: "bit", nullable: false),
                     UserType = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
                     Start_Practice = table.Column<DateOnly>(type: "date", nullable: true),
-                    Specialization = table.Column<int>(type: "int", nullable: true)
+                    Specialization = table.Column<int>(type: "int", nullable: true),
+                    About = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Education = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -94,7 +96,7 @@ namespace LEX.Persistence.Migrations
                 name: "Reviews",
                 columns: table => new
                 {
-                    ReviewId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Rating = table.Column<int>(type: "int", nullable: false),
                     Comment = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
@@ -104,7 +106,7 @@ namespace LEX.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Reviews", x => x.ReviewId);
+                    table.PrimaryKey("PK_Reviews", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Reviews_Users_CustomerId",
                         column: x => x.CustomerId,
@@ -126,7 +128,6 @@ namespace LEX.Persistence.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FileUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CaseId = table.Column<int>(type: "int", nullable: false),
                     CaseRequestId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

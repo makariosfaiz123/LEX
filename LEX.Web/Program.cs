@@ -3,11 +3,13 @@ using LEX.Domain.Interfaces;
 using LEX.Persistence.Data.Context;
 using LEX.Persistence.Data.DataSeed;
 using LEX.Persistence.Repositories;
+using LEX.Service;
 using LEX.Service.Authentication;
 using LEX.Service.CaseRequests;
 using LEX.Service.LawyerService;
 using LEX.Service.ReviewService;
 using LEX.Service.Security;
+using LEX.Service_Abstraction;
 using LEX.Service_Abstraction.Authentication;
 using LEX.Service_Abstraction.CaseRequests;
 using LEX.Service_Abstraction.IAuthentication;
@@ -87,6 +89,7 @@ namespace LEX.Web
             builder.Services.AddScoped<ICaseRequestService, CaseRequestService>();
             builder.Services.AddScoped<ILawyerService, LawyerService>();
             builder.Services.AddScoped<IReviewService, ReviewService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
             //Authorization

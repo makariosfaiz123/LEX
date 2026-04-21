@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LEX.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260420235411_FixReviewEntity")]
-    partial class FixReviewEntity
+    [Migration("20260421061056_NextStep")]
+    partial class NextStep
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
