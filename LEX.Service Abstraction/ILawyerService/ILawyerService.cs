@@ -1,4 +1,5 @@
 ﻿using LEX.Shared.DTOs.LawyerDtos;
+using LEX.Shared.DTOs.ReviewsDTOs;
 using LEX.Shared.Responses;
 using System;
 using System.Collections.Generic;

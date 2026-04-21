@@ -6,11 +6,13 @@ using LEX.Persistence.Repositories;
 using LEX.Service.Authentication;
 using LEX.Service.CaseRequests;
 using LEX.Service.LawyerService;
+using LEX.Service.ReviewService;
 using LEX.Service.Security;
 using LEX.Service_Abstraction.Authentication;
 using LEX.Service_Abstraction.CaseRequests;
 using LEX.Service_Abstraction.IAuthentication;
 using LEX.Service_Abstraction.ILawyerService;
+using LEX.Service_Abstraction.IReviewService;
 using LEX.Service_Abstraction.ISecurity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -84,7 +86,7 @@ namespace LEX.Web
             builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<ICaseRequestService, CaseRequestService>();
             builder.Services.AddScoped<ILawyerService, LawyerService>();
-            builder.Services.AddScoped<ILawyerService, LawyerService>();
+            builder.Services.AddScoped<IReviewService, ReviewService>();
 
 
             //Authorization

@@ -4,6 +4,7 @@ using LEX.Domain.Interfaces;
 using LEX.Service.Helpers;
 using LEX.Service_Abstraction.ILawyerService;
 using LEX.Shared.DTOs.LawyerDtos;
+using LEX.Shared.DTOs.ReviewsDTOs;
 using LEX.Shared.Responses;
 using System;
 using System.Collections.Generic;
@@ -122,23 +123,24 @@ namespace LEX.Service.LawyerService
                 Rating = Math.Round(rating, 1),
                 ReviewsCount = reviewsCount,
 
-                YearsOfExperience = DateTime.Now.Year - lawyer.Start_Practice.Year,
+                YearsOfExperience = DateTime.Now.Year - lawyer.Start_Practice.Year
+                 - (DateTime.Now.DayOfYear < lawyer.Start_Practice.DayOfYear ? 1 : 0),
 
                 About = lawyer.About,
                 Education = lawyer.Education,
 
                 Reviews = lawyer.Reviews.Select(r => new ReviewDto
                 {
+                    Id = r.Id,
                     CustomerName = $"{r.Customer.Fname} {r.Customer.Lname}",
                     Rating = r.Rating,
                     Comment = r.Comment,
-                    CreatedAt = r.CreatedAt
+                    CreatedAt = r.CreatedAt,
                 }).ToList()
             };
 
             return ServiceResponse<LawyerDetailsDto>.SuccessResult(result);
         }
-
 
     }
 }

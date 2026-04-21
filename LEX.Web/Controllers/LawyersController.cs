@@ -1,7 +1,10 @@
 ﻿using LEX.Service_Abstraction.ILawyerService;
 using LEX.Shared.DTOs.LawyerDtos;
+using LEX.Shared.DTOs.ReviewsDTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LEX.Web.Controllers
 {

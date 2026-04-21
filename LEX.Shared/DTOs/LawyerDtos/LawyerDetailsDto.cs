@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LEX.Shared.DTOs.ReviewsDTOs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,14 +17,13 @@ namespace LEX.Shared.DTOs.LawyerDtos
 
         public string? ProfileImage { get; set; }
 
-        public double Rating { get; set; }
-
         public int ReviewsCount { get; set; }
 
         public int YearsOfExperience { get; set; }
 
         public string About { get; set; } 
         public string Education { get; set; }
+        public double Rating { get; set; }
         public List<ReviewDto> Reviews { get; set; } = new();
     }
 }
