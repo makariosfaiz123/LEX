@@ -49,11 +49,11 @@ namespace LEX.Web.Controllers
 
         [Authorize(Roles = "Lawyer")]
         [HttpGet("my-requests-Lawyer")]
-        public async Task<IActionResult> GetMyRequests()
+        public async Task<IActionResult> GetMyRequests([FromQuery] string? status)
         {
             var lawyerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
-            var result = await _caseService.GetRequestsForLawyerAsync(lawyerId);
+            var result = await _caseService.GetRequestsForLawyerAsync(lawyerId, status);
 
             if (!result.Success)
                 return BadRequest(result);
@@ -82,6 +82,20 @@ namespace LEX.Web.Controllers
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
             var result = await _caseService.GetCustomerCasesAsync(userId);
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Lawyer")]
+        [HttpGet("CaseDetailsFor-Lawyer/{id}")]
+        public async Task<IActionResult> GetCaseDetailsForLawyer(int id)
+        {
+            var lawyerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+            var result = await _caseService.GetCaseDetailsForLawyerAsync(id, lawyerId);
+
+            if (!result.Success)
+                return NotFound(result);
 
             return Ok(result);
         }

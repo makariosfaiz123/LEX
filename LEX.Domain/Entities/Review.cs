@@ -1,16 +1,17 @@
 ﻿using LEX.Domain.Entities;
+using LEX.Domain.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LEX.Domain.Entities
 {
-    public class Review
+    public class Review : IEntity<int>
     {
         [Key]
-        public int ReviewId { get; set; }
+        public int Id { get; set; }
 
         [Required]
-        [Range(1, 5, ErrorMessage = "التقييم يجب أن يكون بين 1 و 5 نجوم")]
+        [Range(1, 5)]
         public int Rating { get; set; }
 
         [MaxLength(500)]
