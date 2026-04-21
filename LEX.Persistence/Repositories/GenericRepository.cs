@@ -20,7 +20,7 @@ namespace LEX.Persistence.Repositories
             _dbContext = dbContext;
         }
 
-        // 🔹 Basic CRUD
+        //Basic CRUD
         public async Task<IEnumerable<TEntity>> GetAllAsync()
             => await _dbContext.Set<TEntity>().ToListAsync();
 
@@ -45,22 +45,22 @@ namespace LEX.Persistence.Repositories
         {
             IQueryable<TEntity> query = _dbContext.Set<TEntity>();
 
-            // 🔹 Filter
+            //Filter
             if (filter != null)
                 query = query.Where(filter);
 
-            // 🔹 Includes
+            // Include
             if (includes != null)
             {
                 foreach (var include in includes)
                     query = query.Include(include);
             }
 
-            // 🔹 Sorting
+            //Sorting
             if (orderBy != null)
                 query = orderBy(query);
 
-            // 🔹 Pagination
+            //Pagination
             if (page.HasValue && pageSize.HasValue)
             {
                 query = query

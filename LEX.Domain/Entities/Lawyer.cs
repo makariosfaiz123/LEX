@@ -10,7 +10,7 @@ namespace LEX.Domain.Entities
     public class Lawyer : Users
     {
         #region (RS)
-        public ICollection<CaseRequests> Case_Requests { get; set; } = [];
+        public ICollection<CaseRequest> Case_Requests { get; set; } = [];
         public ICollection<Documents> Documents { get; set; } = [];
         public ICollection<Review> Reviews { get; set; } = [];
 
@@ -18,8 +18,9 @@ namespace LEX.Domain.Entities
 
 
         public DateOnly Start_Practice { get; set; }
-
         public Specializations Specialization { get; set; }
+        public string About { get; set; }
+        public string Education { get; set; }
         //public Status Status { get; set; } = Status.Waiting;
     }
 }

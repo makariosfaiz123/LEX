@@ -14,7 +14,7 @@ namespace LEX.Persistence.Data.Configuration
         public void Configure(EntityTypeBuilder<Users> builder)
         {
             // Primary Key
-            builder.HasKey(u => u.User_Id);
+            builder.HasKey(u => u.Id);
 
             // Required fields
             builder.Property(u => u.Fname)

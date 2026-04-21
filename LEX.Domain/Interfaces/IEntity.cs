@@ -8,6 +8,6 @@ namespace LEX.Domain.Interfaces
 {
     public interface IEntity<TKey>
     {
-        TKey User_Id { get; set; }
+        TKey Id { get; set; }
     }
 }

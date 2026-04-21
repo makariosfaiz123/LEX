@@ -2,39 +2,37 @@
 
 #nullable disable
 
-namespace LEX.Persistence.Data.Migrations
+namespace LEX.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class AddPasswordHash : Migration
+    public partial class updateLawyer : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "PasswordHash",
-                table: "Lawyers",
+                name: "About",
+                table: "Users",
                 type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
+                nullable: true);
 
             migrationBuilder.AddColumn<string>(
-                name: "PasswordHash",
-                table: "Customers",
+                name: "Education",
+                table: "Users",
                 type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
+                nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "PasswordHash",
-                table: "Lawyers");
+                name: "About",
+                table: "Users");
 
             migrationBuilder.DropColumn(
-                name: "PasswordHash",
-                table: "Customers");
+                name: "Education",
+                table: "Users");
         }
     }
 }

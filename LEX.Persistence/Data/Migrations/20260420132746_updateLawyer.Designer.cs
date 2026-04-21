@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace LEX.Persistence.Data.Migrations
+namespace LEX.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260417164806_FixEmailUnique")]
-    partial class FixEmailUnique
+    [Migration("20260420132746_updateLawyer")]
+    partial class updateLawyer
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,20 +25,44 @@ namespace LEX.Persistence.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("LEX.Domain.Entities.CaseRequests", b =>
+            modelBuilder.Entity("LEX.Domain.Entities.CaseDocument", b =>
                 {
-                    b.Property<int>("Case_Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Case_Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Attached_Files")
+                    b.Property<int>("CaseId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CaseRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.HasKey("Id");
+
+                    b.HasIndex("CaseRequestId");
+
+                    b.ToTable("CaseDocument");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.CaseRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int>("Case_Type")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
@@ -50,7 +74,10 @@ namespace LEX.Persistence.Data.Migrations
                     b.Property<int>("LawyerId")
                         .HasColumnType("int");
 
-                    b.HasKey("Case_Id");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
 
@@ -119,11 +146,12 @@ namespace LEX.Persistence.Data.Migrations
 
             modelBuilder.Entity("LEX.Domain.Entities.Users", b =>
                 {
-                    b.Property<int>("User_Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("User_Id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("User_Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateOnly>("Date_Of_Birth")
                         .HasColumnType("date");
@@ -175,7 +203,7 @@ namespace LEX.Persistence.Data.Migrations
                     b.Property<int>("gender")
                         .HasColumnType("int");
 
-                    b.HasKey("User_Id");
+                    b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -198,6 +226,14 @@ namespace LEX.Persistence.Data.Migrations
                 {
                     b.HasBaseType("LEX.Domain.Entities.Users");
 
+                    b.Property<string>("About")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Education")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Specialization")
                         .HasColumnType("int");
 
@@ -207,7 +243,18 @@ namespace LEX.Persistence.Data.Migrations
                     b.HasDiscriminator().HasValue("Lawyer");
                 });
 
-            modelBuilder.Entity("LEX.Domain.Entities.CaseRequests", b =>
+            modelBuilder.Entity("LEX.Domain.Entities.CaseDocument", b =>
+                {
+                    b.HasOne("LEX.Domain.Entities.CaseRequest", "CaseRequest")
+                        .WithMany("Documents")
+                        .HasForeignKey("CaseRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CaseRequest");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.CaseRequest", b =>
                 {
                     b.HasOne("LEX.Domain.Entities.Customer", "Customer")
                         .WithMany("Case_Requests")
@@ -254,6 +301,11 @@ namespace LEX.Persistence.Data.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Lawyer");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.CaseRequest", b =>
+                {
+                    b.Navigation("Documents");
                 });
 
             modelBuilder.Entity("LEX.Domain.Entities.Customer", b =>

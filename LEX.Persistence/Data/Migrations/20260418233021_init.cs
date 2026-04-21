@@ -3,85 +3,70 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace LEX.Persistence.Data.Migrations
+namespace LEX.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Customers",
+                name: "Users",
                 columns: table => new
                 {
                     User_Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     gender = table.Column<int>(type: "int", nullable: false),
-                    Fname = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Lname = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Fname = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Lname = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Phone = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: true),
                     Date_Of_Birth = table.Column<DateOnly>(type: "date", nullable: false),
                     Porfile_Image = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    RoleS = table.Column<int>(type: "int", nullable: false)
+                    RoleS = table.Column<int>(type: "int", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OtpCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OtpExpiry = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsVerified = table.Column<bool>(type: "bit", nullable: false),
+                    UserType = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
+                    Start_Practice = table.Column<DateOnly>(type: "date", nullable: true),
+                    Specialization = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Customers", x => x.User_Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Lawyers",
-                columns: table => new
-                {
-                    User_Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Start_Practice = table.Column<DateOnly>(type: "date", nullable: false),
-                    Specialization = table.Column<int>(type: "int", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    gender = table.Column<int>(type: "int", nullable: false),
-                    Fname = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Lname = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Date_Of_Birth = table.Column<DateOnly>(type: "date", nullable: false),
-                    Porfile_Image = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RoleS = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Lawyers", x => x.User_Id);
+                    table.PrimaryKey("PK_Users", x => x.User_Id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "CaseRequests",
                 columns: table => new
                 {
-                    Case_Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CustomerId = table.Column<int>(type: "int", nullable: false),
                     LawyerId = table.Column<int>(type: "int", nullable: false),
                     Case_Type = table.Column<int>(type: "int", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Attached_Files = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CaseRequests", x => x.Case_Id);
+                    table.PrimaryKey("PK_CaseRequests", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CaseRequests_Customers_CustomerId",
+                        name: "FK_CaseRequests_Users_CustomerId",
                         column: x => x.CustomerId,
-                        principalTable: "Customers",
+                        principalTable: "Users",
                         principalColumn: "User_Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_CaseRequests_Lawyers_LawyerId",
+                        name: "FK_CaseRequests_Users_LawyerId",
                         column: x => x.LawyerId,
-                        principalTable: "Lawyers",
+                        principalTable: "Users",
                         principalColumn: "User_Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -98,11 +83,11 @@ namespace LEX.Persistence.Data.Migrations
                 {
                     table.PrimaryKey("PK_Documents", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Documents_Lawyers_Lawyer_Id",
+                        name: "FK_Documents_Users_Lawyer_Id",
                         column: x => x.Lawyer_Id,
-                        principalTable: "Lawyers",
+                        principalTable: "Users",
                         principalColumn: "User_Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -121,18 +106,44 @@ namespace LEX.Persistence.Data.Migrations
                 {
                     table.PrimaryKey("PK_Reviews", x => x.ReviewId);
                     table.ForeignKey(
-                        name: "FK_Reviews_Customers_CustomerId",
+                        name: "FK_Reviews_Users_CustomerId",
                         column: x => x.CustomerId,
-                        principalTable: "Customers",
+                        principalTable: "Users",
                         principalColumn: "User_Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Reviews_Lawyers_LawyerId",
+                        name: "FK_Reviews_Users_LawyerId",
                         column: x => x.LawyerId,
-                        principalTable: "Lawyers",
+                        principalTable: "Users",
                         principalColumn: "User_Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CaseDocument",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FileUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CaseId = table.Column<int>(type: "int", nullable: false),
+                    CaseRequestId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CaseDocument", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CaseDocument_CaseRequests_CaseRequestId",
+                        column: x => x.CaseRequestId,
+                        principalTable: "CaseRequests",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CaseDocument_CaseRequestId",
+                table: "CaseDocument",
+                column: "CaseRequestId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CaseRequests_CustomerId",
@@ -158,13 +169,19 @@ namespace LEX.Persistence.Data.Migrations
                 name: "IX_Reviews_LawyerId",
                 table: "Reviews",
                 column: "LawyerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CaseRequests");
+                name: "CaseDocument");
 
             migrationBuilder.DropTable(
                 name: "Documents");
@@ -173,10 +190,10 @@ namespace LEX.Persistence.Data.Migrations
                 name: "Reviews");
 
             migrationBuilder.DropTable(
-                name: "Customers");
+                name: "CaseRequests");
 
             migrationBuilder.DropTable(
-                name: "Lawyers");
+                name: "Users");
         }
     }
 }
