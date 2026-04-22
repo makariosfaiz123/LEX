@@ -90,6 +90,11 @@ namespace LEX.Web
             builder.Services.AddScoped<ILawyerService, LawyerService>();
             builder.Services.AddScoped<IReviewService, ReviewService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IFileService, FileService>();
+            builder.Services.AddScoped<IDocumentService, DocumentService>();
+
+
 
 
             //Authorization
@@ -145,7 +150,7 @@ namespace LEX.Web
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
+            app.UseStaticFiles();
             app.UseAuthentication();
 
             app.UseHttpsRedirection();
