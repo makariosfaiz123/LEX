@@ -2,6 +2,7 @@
 using LEX.Domain.EnumS;
 using LEX.Domain.Interfaces;
 using LEX.Service.Helpers;
+using LEX.Service_Abstraction;
 using LEX.Service_Abstraction.CaseRequests;
 using LEX.Shared.DTOs.CaseRequest;
 using LEX.Shared.Responses;
@@ -17,10 +18,12 @@ namespace LEX.Service.CaseRequests
     public class CaseRequestService : ICaseRequestService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly INotificationService _notificationService;
 
-        public CaseRequestService(IUnitOfWork unitOfWork)
+        public CaseRequestService(IUnitOfWork unitOfWork,INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
+            _notificationService = notificationService;
         }
 
         public async Task<ServiceResponse<string>> CreateCaseAsync(CreateCaseRequestDto dto, int userId)
@@ -123,7 +126,13 @@ namespace LEX.Service.CaseRequests
         {
             var caseRepo = _unitOfWork.GetRepository<CaseRequest, int>();
 
-            var caseRequest = await caseRepo.GetByIdAsync(dto.CaseId);
+            var caseRequest = (await caseRepo.GetAsync(
+                c => c.Id == dto.CaseId,
+                null,
+                null,
+                null,
+                c => c.Lawyer 
+            )).FirstOrDefault();
 
             // لو مش موجود
             if (caseRequest == null)
@@ -141,7 +150,12 @@ namespace LEX.Service.CaseRequests
             if (dto.IsAccepted)
             {
                 caseRequest.Status = CaseStatus.Accepted;
-
+                await _notificationService.AddNotificationAsync(
+                    caseRequest.CustomerId,
+                    "Request Accepted",
+                    $"Your request has been accepted by Dr. {caseRequest.Lawyer.Fname} {caseRequest.Lawyer.Lname}.",
+                    NotificationType.Success
+                );
                 //  هنا بعدين هنفتح Chat
                 // ممكن تعمل CreateChat هنا
             }
@@ -149,7 +163,15 @@ namespace LEX.Service.CaseRequests
             {
                 //  Reject
                 caseRequest.Status = CaseStatus.Rejected;
+                await _notificationService.AddNotificationAsync(
+                    caseRequest.CustomerId,
+                    "Request Declined",
+                    "Your request was declined. Please try another lawyer.",
+                    NotificationType.Error
+                );
             }
+
+            
 
             caseRepo.Update(caseRequest);
             await _unitOfWork.SaveChangesAsync();

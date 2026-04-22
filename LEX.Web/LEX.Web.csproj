@@ -20,4 +20,8 @@
     <ProjectReference Include="..\LEX.Presentation\LEX.Presentation.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\" />
+  </ItemGroup>
+
 </Project>
