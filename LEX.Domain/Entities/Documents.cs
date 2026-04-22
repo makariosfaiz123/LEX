@@ -1,4 +1,5 @@
 ﻿using LEX.Domain.EnumS;
+using LEX.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace LEX.Domain.Entities
 {
-    public class Documents
+    public class Documents : IEntity<int>
     {
 
 

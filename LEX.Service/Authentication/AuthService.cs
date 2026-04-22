@@ -3,6 +3,7 @@ using LEX.Domain.Entities;
 using LEX.Domain.EnumS;
 using LEX.Domain.Interfaces;
 using LEX.Service.Helpers;
+using LEX.Service_Abstraction;
 using LEX.Service_Abstraction.Authentication;
 using LEX.Service_Abstraction.IAuthentication;
 using LEX.Service_Abstraction.ISecurity;
@@ -10,6 +11,8 @@ using LEX.Shared.DTOs.AuthenticationForgotPassword;
 using LEX.Shared.DTOs.AuthenticationLogin;
 using LEX.Shared.DTOs.AuthenticationRegister;
 using LEX.Shared.DTOs.EmailOTP;
+using LEX.Shared.Responses;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,15 +27,17 @@ namespace LEX.Service.Authentication
 
         private readonly ITokenService _tokenService;
         private readonly IEmailService _emailService;
+        private readonly IFileService _fileService;
 
-        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService ,IEmailService emailService)
+        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService ,IEmailService emailService ,IFileService fileService)
         {
             _unitOfWork = unitOfWork;
             _tokenService = tokenService;
             _emailService = emailService;
+            _fileService = fileService;
         }
 
-        public async Task<string> RegisterAsync(RegisterDto dto)
+        public async Task<ServiceResponse<RegisterResponseDto>> RegisterAsync(RegisterDto dto)
         {
             var userRepo = _unitOfWork.GetRepository<Users, int>();
 
@@ -41,9 +46,7 @@ namespace LEX.Service.Authentication
                                .FirstOrDefault();
 
             if (existingUser != null && existingUser.IsVerified)
-                return "Email already exists";
-
-
+                return ServiceResponse<RegisterResponseDto>.Fail("Email already exists");
 
 
             // 🔁 لو موجود بس مش مفعل → ابعت OTP تاني
@@ -75,11 +78,17 @@ namespace LEX.Service.Authentication
                     resendBody
                 );
 
-                return "OTP sent again. Check your email.";
+                return ServiceResponse<RegisterResponseDto>.SuccessResult(
+                    new RegisterResponseDto
+                    {
+                        Message = "OTP sent again. Check your email.",
+                        UserId = existingUser.Id
+                    }
+                );
             }
 
             if (dto.DateOfBirth >= DateOnly.FromDateTime(DateTime.Now))
-                return "Invalid Date of Birth";
+                return ServiceResponse<RegisterResponseDto>.Fail("Invalid Date of Birth");
 
             // Hash Password
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
@@ -106,19 +115,19 @@ namespace LEX.Service.Authentication
             else if (dto.Role == RoleS.Lawyer)
             {
                 if (dto.StartPractice == null || dto.Specializations == null || !dto.Specializations.Any())
-                    return "Lawyer data is incomplete";
+                    return ServiceResponse<RegisterResponseDto>.Fail("Lawyer data is incomplete");
 
-                // 🔥 Validation
+                //Validation
                 if (dto.Specializations.Count > 2)
-                    return "Maximum 2 specializations allowed";
+                    return ServiceResponse<RegisterResponseDto>.Fail("Maximum 2 specializations allowed");
 
-                // 🔥 Convert List → Flags
+                // Convert List → Flags
                 Specializations specs = Specializations.None;
 
                 foreach (var spec in dto.Specializations)
                 {
                     if (!EnumHelper.TryParseEnum<Specializations>(spec, out var parsed))
-                        return $"Invalid specialization: {spec}";
+                        return ServiceResponse<RegisterResponseDto>.Fail($"Invalid specialization: {spec}");
 
                     specs |= parsed;
                 }
@@ -141,7 +150,7 @@ namespace LEX.Service.Authentication
             }
             else
             {
-                return "Invalid Role";
+                return ServiceResponse<RegisterResponseDto>.Fail("Invalid Role");
             }
 
             //OTP Email
@@ -202,7 +211,68 @@ namespace LEX.Service.Authentication
                 body
             );
 
-            return "User Registered. Check your email for OTP.";
+            return ServiceResponse<RegisterResponseDto>.SuccessResult(
+                new RegisterResponseDto
+                {
+                    Message = "User Registered. Check your email for OTP.",
+                    UserId = user.Id
+                }
+            );
+        }
+
+        public async Task<ServiceResponse<string>> RegisterDocumentsAsync(
+                int lawyerId,
+                List<(Stream Stream, string FileName, DocumentType Type)> documents
+            )
+        {
+            // Validation
+            if (documents == null || !documents.Any())
+                return ServiceResponse<string>.Fail("No documents uploaded");
+
+
+            var docRepo = _unitOfWork.GetRepository<Documents, int>();
+
+            var requiredTypes = new[]
+            {
+                DocumentType.Passport,
+                DocumentType.SyndicateCard,
+                DocumentType.LawyerLicense
+            };
+
+            var uploadedTypes = documents.Select(d => d.Type).Distinct().ToList();
+
+            foreach (var required in requiredTypes)
+            {
+                if (!uploadedTypes.Contains(required))
+                    return ServiceResponse<string>.Fail($"Missing required document: {required}");
+            }
+
+            // Allowed extensions
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+
+            foreach (var doc in documents)
+            {
+                var extension = Path.GetExtension(doc.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(extension))
+                    return ServiceResponse<string>.Fail("Only PDF/DOC/DOCX allowed");
+
+                if (doc.Stream.Length > 5 * 1024 * 1024)
+                    return ServiceResponse<string>.Fail("File too large (max 5MB)");
+
+                var url = await _fileService.UploadFileAsync(doc.Stream, doc.FileName);
+
+                await docRepo.AddAsync(new Documents
+                {
+                    Lawyer_Id = lawyerId,
+                    Document_URL = url,
+                    Document_Type = doc.Type
+                });
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return ServiceResponse<string>.SuccessResult("Documents uploaded successfully");
         }
 
         public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)

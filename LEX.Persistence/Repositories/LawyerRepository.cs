@@ -24,7 +24,9 @@ namespace LEX.Persistence.Repositories
             return await _context.Lawyers
                 .Include(l => l.Reviews)
                     .ThenInclude(r => r.Customer)
+                .Include(l => l.Documents) 
                 .FirstOrDefaultAsync(l => l.Id == id);
         }
+
     }
 }

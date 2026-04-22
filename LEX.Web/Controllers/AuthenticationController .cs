@@ -1,10 +1,13 @@
-﻿using LEX.Service_Abstraction.Authentication;
+﻿using LEX.Domain.EnumS;
+using LEX.Service_Abstraction.Authentication;
 using LEX.Shared.DTOs.AuthenticationForgotPassword;
 using LEX.Shared.DTOs.AuthenticationLogin;
 using LEX.Shared.DTOs.AuthenticationRegister;
 using LEX.Shared.DTOs.EmailOTP;
+using LEX.Web.UploadProfailDTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LEX.Web.Controllers
 {
@@ -27,8 +30,42 @@ namespace LEX.Web.Controllers
 
             var result = await _authService.RegisterAsync(dto);
 
-            if ( result == "Lawyer data is required")
+            if (!result.Success)
                 return BadRequest(result);
+
+            return Ok(result);
+        }
+
+
+
+        [HttpPost("register-documents")]
+        public async Task<IActionResult> RegisterDocuments(
+    [FromForm] int lawyerId,
+    [FromForm] List<IFormFile> files,
+    [FromForm] List<string> types
+)
+        {
+            if (files == null || types == null || files.Count != types.Count)
+                return BadRequest("Each file must have a corresponding type");
+
+            var mappedDocs = new List<(Stream, string, DocumentType)>();
+
+            for (int i = 0; i < files.Count; i++)
+            {
+                if (!Enum.TryParse<DocumentType>(types[i], out var parsedType))
+                    return BadRequest($"Invalid type: {types[i]}");
+
+                mappedDocs.Add((
+                    files[i].OpenReadStream(),
+                    files[i].FileName,
+                    parsedType
+                ));
+            }
+
+            var result = await _authService.RegisterDocumentsAsync(
+                lawyerId,
+                mappedDocs
+            );
 
             return Ok(result);
         }
