@@ -22,54 +22,43 @@ namespace LEX.Web.Controllers
             _authService = authService;
         }
 
-        [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterDto dto)
+        [HttpPost("register/customer")]
+        public async Task<IActionResult> RegisterCustomer([FromBody] RegisterCustomerDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var result = await _authService.RegisterAsync(dto);
-
-            if (!result.Success)
-                return BadRequest(result);
-
-            return Ok(result);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var result = await _authService.RegisterCustomerAsync(dto);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
-
-
-        [HttpPost("register-documents")]
-        public async Task<IActionResult> RegisterDocuments(
-    [FromForm] int lawyerId,
-    [FromForm] List<IFormFile> files,
-    [FromForm] List<string> types
-)
+        [HttpPost("register/lawyer")]
+        public async Task<IActionResult> RegisterLawyer([FromForm] RegisterLawyerFormDto form)
         {
-            if (files == null || types == null || files.Count != types.Count)
-                return BadRequest("Each file must have a corresponding type");
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var mappedDocs = new List<(Stream, string, DocumentType)>();
-
-            for (int i = 0; i < files.Count; i++)
+            var documents = new List<(Stream Stream, string FileName, DocumentType Type)>
             {
-                if (!Enum.TryParse<DocumentType>(types[i], out var parsedType))
-                    return BadRequest($"Invalid type: {types[i]}");
+                (form.NationalIdFront.OpenReadStream(), form.NationalIdFront.FileName, DocumentType.NationalIdFront),
+                (form.NationalIdBack.OpenReadStream(), form.NationalIdBack.FileName, DocumentType.NationalIdBack),
+                (form.SyndicateCard.OpenReadStream(), form.SyndicateCard.FileName, DocumentType.SyndicateCard)
+            };
 
-                mappedDocs.Add((
-                    files[i].OpenReadStream(),
-                    files[i].FileName,
-                    parsedType
-                ));
-            }
+            var result = await _authService.RegisterLawyerAsync(form, documents);
 
-            var result = await _authService.RegisterDocumentsAsync(
-                lawyerId,
-                mappedDocs
-            );
+            foreach (var doc in documents) doc.Stream.Dispose();
 
-            return Ok(result);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [HttpGet("verify-email")]
+        public async Task<IActionResult> VerifyEmail([FromQuery] int userId, [FromQuery] string token)
+        {
+            var result = await _authService.VerifyEmailLinkAsync(userId, token);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        // ==========================================
+        // 3. تسجيل الدخول (نفس الكود بتاعك)
+        // ==========================================
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
@@ -84,7 +73,9 @@ namespace LEX.Web.Controllers
             return Ok(result);
         }
 
-
+        // ==========================================
+        // 4. تأكيد الـ OTP (نفس الكود بتاعك)
+        // ==========================================
         [HttpPost("verify-otp")]
         public async Task<IActionResult> VerifyOtp(VerifyOtpDto dto)
         {
@@ -96,6 +87,9 @@ namespace LEX.Web.Controllers
             return Ok(result);
         }
 
+        // ==========================================
+        // 5. نسيان كلمة المرور (نفس الكود بتاعك)
+        // ==========================================
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
         {
@@ -106,7 +100,24 @@ namespace LEX.Web.Controllers
 
             return Ok(result);
         }
+        [HttpGet("specializations")]
+        public IActionResult GetSpecializations()
+        {
+            var specializations = Enum.GetValues(typeof(Specializations))
+                .Cast<Specializations>()
+                .Where(s => s != Specializations.None)
+                .Select(s => new
+                {
+                    Id = (int)s,
+                    Name = s.ToString()
+                })
+                .ToList();
 
+            return Ok(specializations);
+        }
+        // ==========================================
+        // 6. إعادة تعيين كلمة المرور (نفس الكود بتاعك)
+        // ==========================================
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
         {
@@ -117,7 +128,5 @@ namespace LEX.Web.Controllers
 
             return Ok(result);
         }
-
-
     }
 }

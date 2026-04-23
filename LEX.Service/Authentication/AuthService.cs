@@ -29,14 +29,169 @@ namespace LEX.Service.Authentication
         private readonly IEmailService _emailService;
         private readonly IFileService _fileService;
 
-        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService ,IEmailService emailService ,IFileService fileService)
+        public AuthService(IUnitOfWork unitOfWork, ITokenService tokenService, IEmailService emailService, IFileService fileService)
         {
             _unitOfWork = unitOfWork;
             _tokenService = tokenService;
             _emailService = emailService;
             _fileService = fileService;
         }
+        public async Task<ServiceResponse<RegisterResponseDto>> RegisterCustomerAsync(RegisterCustomerDto dto)
+        {
+            var userRepo = _unitOfWork.GetRepository<Users, int>();
+            var existingUser = (await userRepo.GetAsync(u => u.Email == dto.Email)).FirstOrDefault();
 
+            if (existingUser != null && existingUser.IsVerified)
+                return ServiceResponse<RegisterResponseDto>.Fail("Email already exists");
+
+            string baseUrl = "https://localhost:5232"; // غيره برابط الـ API بتاعك
+            string verificationToken = Guid.NewGuid().ToString("N");
+
+            // إعادة إرسال اللينك لو الحساب مش متفعل
+            if (existingUser != null && !existingUser.IsVerified)
+            {
+                existingUser.OtpCode = verificationToken;
+                existingUser.OtpExpiry = DateTime.UtcNow.AddMinutes(20); // ⏱️ 20 دقيقة
+                await _unitOfWork.SaveChangesAsync();
+
+                string resendLink = $"{baseUrl}/api/auth/verify-email?userId={existingUser.Id}&token={verificationToken}";
+                await _emailService.SendEmailAsync(existingUser.Email, "LEX - Verify Your Email", GetVerificationEmailBody(resendLink));
+
+                return ServiceResponse<RegisterResponseDto>.SuccessResult(new RegisterResponseDto { Message = "Verification link sent again.", UserId = existingUser.Id });
+            }
+
+            var customer = new Customer
+            {
+                Fname = dto.Fname,
+                Lname = dto.Lname,
+                Email = dto.Email,
+                Phone = dto.Phone,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                Date_Of_Birth = (DateOnly)dto.DateOfBirth,
+                gender = (Gender)dto.Gender,
+                Porfile_Image = dto.ProfileImage,
+                RoleS = RoleS.Customer,
+                Status = Status.Active,
+                OtpCode = verificationToken,
+                OtpExpiry = DateTime.UtcNow.AddMinutes(20), // ⏱️ 20 دقيقة
+                IsVerified = false
+            };
+
+            await userRepo.AddAsync(customer);
+            await _unitOfWork.SaveChangesAsync();
+
+            string verifyLink = $"{baseUrl}/api/auth/verify-email?userId={customer.Id}&token={verificationToken}";
+            await _emailService.SendEmailAsync(customer.Email, "LEX - Verify Your Email", GetVerificationEmailBody(verifyLink));
+
+            return ServiceResponse<RegisterResponseDto>.SuccessResult(new RegisterResponseDto { Message = "Customer Registered. Check email.", UserId = customer.Id });
+        }
+
+        public async Task<ServiceResponse<RegisterResponseDto>> RegisterLawyerAsync(
+            RegisterLawyerFormDto dto, List<(Stream Stream, string FileName, DocumentType Type)> documents)
+        {
+            var userRepo = _unitOfWork.GetRepository<Users, int>();
+            var docRepo = _unitOfWork.GetRepository<Documents, int>();
+            var baseUrl = "https://localhost:5232";
+
+            var existingUser = (await userRepo.GetAsync(u => u.Email == dto.Email)).FirstOrDefault();
+            if (existingUser != null && existingUser.IsVerified)
+                return ServiceResponse<RegisterResponseDto>.Fail("Email already exists");
+
+            string verificationToken = Guid.NewGuid().ToString("N");
+
+            if (existingUser != null && !existingUser.IsVerified)
+            {
+                existingUser.OtpCode = verificationToken;
+                existingUser.OtpExpiry = DateTime.UtcNow.AddMinutes(20); // ⏱️ 20 دقيقة
+                await _unitOfWork.SaveChangesAsync();
+
+                string resendLink = $"{baseUrl}/api/auth/verify-email?userId={existingUser.Id}&token={verificationToken}";
+                await _emailService.SendEmailAsync(existingUser.Email, "LEX - Verify Your Email", GetVerificationEmailBody(resendLink));
+                return ServiceResponse<RegisterResponseDto>.SuccessResult(new RegisterResponseDto { Message = "Verification link sent again.", UserId = existingUser.Id });
+            }
+
+            // فحص الملفات
+            var allowedExtensions = new[] { ".pdf", ".jpeg", ".jpg", ".png" };
+            foreach (var doc in documents)
+            {
+                if (!allowedExtensions.Contains(Path.GetExtension(doc.FileName).ToLower()))
+                    return ServiceResponse<RegisterResponseDto>.Fail($"Invalid file type for {doc.Type}.");
+                if (doc.Stream.Length > 5 * 1024 * 1024)
+                    return ServiceResponse<RegisterResponseDto>.Fail("File too large (max 5MB)");
+            }
+
+            Specializations specs = Specializations.None;
+            foreach (var spec in dto.Specializations)
+            {
+                if (Enum.TryParse<Specializations>(spec, out var parsed)) specs |= parsed;
+            }
+
+            var lawyer = new Lawyer
+            {
+                Fname = dto.Fname,
+                Lname = dto.Lname,
+                Email = dto.Email,
+                Phone = dto.Phone,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                RoleS = RoleS.Lawyer,
+                Status = Status.Waiting,
+                Start_Practice = dto.StartPractice.Value,
+                Specialization = specs,
+                OtpCode = verificationToken,
+                OtpExpiry = DateTime.UtcNow.AddMinutes(20), // ⏱️ 20 دقيقة
+                IsVerified = false
+            };
+
+            await userRepo.AddAsync(lawyer);
+            await _unitOfWork.SaveChangesAsync();
+
+            // رفع الملفات
+            foreach (var doc in documents)
+            {
+                var url = await _fileService.UploadFileAsync(doc.Stream, doc.FileName);
+                await docRepo.AddAsync(new Documents { Lawyer_Id = lawyer.Id, Document_URL = url, Document_Type = doc.Type });
+            }
+            await _unitOfWork.SaveChangesAsync();
+
+            string verifyLink = $"{baseUrl}/api/auth/verify-email?userId={lawyer.Id}&token={verificationToken}";
+            await _emailService.SendEmailAsync(lawyer.Email, "LEX - Verify Your Email", GetVerificationEmailBody(verifyLink));
+
+            return ServiceResponse<RegisterResponseDto>.SuccessResult(new RegisterResponseDto { Message = "Lawyer Registered. Check email.", UserId = lawyer.Id });
+        }
+
+        public async Task<ServiceResponse<string>> VerifyEmailLinkAsync(int userId, string token)
+        {
+            var userRepo = _unitOfWork.GetRepository<Users, int>();
+            var user = await userRepo.GetByIdAsync(userId);
+
+            if (user == null) return ServiceResponse<string>.Fail("User not found.");
+            if (user.IsVerified) return ServiceResponse<string>.Fail("Email already verified.");
+            if (user.OtpCode != token) return ServiceResponse<string>.Fail("Invalid token.");
+            if (user.OtpExpiry < DateTime.UtcNow) return ServiceResponse<string>.Fail("Link expired.");
+
+            user.IsVerified = true;
+            user.OtpCode = null;
+            user.OtpExpiry = null;
+
+            userRepo.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ServiceResponse<string>.SuccessResult("Email verified successfully.");
+        }
+
+        private string GetVerificationEmailBody(string link)
+        {
+            return $@"
+            <html>
+            <body style='font-family: Arial; padding: 20px;'>
+                <div style='max-width: 500px; margin: auto; padding: 20px; border-radius: 10px; text-align: center;'>
+                    <h2 style='color: #2c3e50;'>LEX ⚖️</h2>
+                    <p>Click below to verify your email (Valid for 20 minutes):</p>
+                    <a href='{link}' style='padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;'>Verify Email</a>
+                </div>
+            </body>
+            </html>";
+        }
         public async Task<ServiceResponse<RegisterResponseDto>> RegisterAsync(RegisterDto dto)
         {
             var userRepo = _unitOfWork.GetRepository<Users, int>();
@@ -299,7 +454,8 @@ namespace LEX.Service.Authentication
             return new AuthResponseDto
             {
                 Email = user.Email,
-                Token = token
+                Token = token,
+                Role = user.RoleS.ToString() // كده هترجع "Lawyer" أو "Customer"            };
             };
         }
 

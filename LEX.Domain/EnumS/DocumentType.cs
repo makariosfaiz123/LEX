@@ -18,6 +18,9 @@ namespace LEX.Domain.EnumS
         CaseEvidence = 7,
         LegalContract = 8,
         CourtDecision = 9,
+        NationalIdFront = 10,
+        NationalIdBack = 11,
+
 
     }
 }

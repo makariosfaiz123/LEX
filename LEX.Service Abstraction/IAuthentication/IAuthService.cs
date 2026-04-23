@@ -14,6 +14,12 @@ namespace LEX.Service_Abstraction.Authentication
 {
     public interface IAuthService
     {
+        Task<ServiceResponse<RegisterResponseDto>> RegisterCustomerAsync(RegisterCustomerDto dto);
+        Task<ServiceResponse<RegisterResponseDto>> RegisterLawyerAsync(
+            RegisterLawyerFormDto dto,
+            List<(Stream Stream, string FileName, DocumentType Type)> documents);
+
+        Task<ServiceResponse<string>> VerifyEmailLinkAsync(int userId, string token);
         Task<AuthResponseDto?> LoginAsync(LoginDto dto);
         //Task<string> RegisterAsync(RegisterDto dto);
         Task<ServiceResponse<RegisterResponseDto>> RegisterAsync(RegisterDto dto);
