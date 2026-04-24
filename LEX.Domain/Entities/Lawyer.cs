@@ -21,6 +21,7 @@ namespace LEX.Domain.Entities
         public Specializations Specialization { get; set; }
         public string About { get; set; }
         public string Education { get; set; }
-        //public Status Status { get; set; } = Status.Waiting;
+
+        public string? RejectionReason { get; set; }
     }
 }

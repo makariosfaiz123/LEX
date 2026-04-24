@@ -275,32 +275,56 @@ namespace LEX.Service.Authentication
             return ServiceResponse<string>.SuccessResult("Documents uploaded successfully");
         }
 
-        public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
+        public async Task<ServiceResponse<AuthResponseDto>> LoginAsync(LoginDto dto)
         {
             var userRepo = _unitOfWork.GetRepository<Users, int>();
 
             var user = (await userRepo.GetAsync(u => u.Email == dto.Email))
                        .FirstOrDefault();
 
+            //user not found
             if (user == null)
-                return null;
+                return ServiceResponse<AuthResponseDto>.Fail("Invalid email or password");
 
+            // not verified
             if (!user.IsVerified)
-                return null;
+                return ServiceResponse<AuthResponseDto>.Fail("Please verify your email first");
 
+            // wrong password
             var isValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
 
             if (!isValid)
-                return null;
+                return ServiceResponse<AuthResponseDto>.Fail("Invalid email or password");
 
+            // Lawyer Approval Check
+            if (user.RoleS == RoleS.Lawyer)
+            {
+                var lawyer = user as Lawyer;
 
+                if (lawyer.Status == Status.Waiting)
+                {
+                    return ServiceResponse<AuthResponseDto>.Fail(
+                        "Your account is under review. Please wait for admin approval."
+                    );
+                }
+
+                if (lawyer.Status == Status.Blocked)
+                {
+                    return ServiceResponse<AuthResponseDto>.Fail(
+                        $"Your account was rejected. Reason: {lawyer.RejectionReason}"
+                    );
+                }
+            }
+
+            //create token
             var token = _tokenService.CreateToken(user);
 
-            return new AuthResponseDto
+            //success response
+            return ServiceResponse<AuthResponseDto>.SuccessResult(new AuthResponseDto
             {
                 Email = user.Email,
                 Token = token
-            };
+            });
         }
 
         public async Task<string> VerifyOtpAsync(VerifyOtpDto dto)
