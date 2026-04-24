@@ -104,5 +104,96 @@ namespace LEX.Service
 
             return ServiceResponse<List<DocumentDto>>.SuccessResult(result);
         }
+
+
+
+        public async Task<ServiceResponse<string>> ResubmitDocumentsAsync(
+                int userId,
+                List<(Stream Stream, string FileName)> files,
+                List<DocumentType> types
+            )
+        {
+            var userRepo = _unitOfWork.GetRepository<Users, int>();
+            var docRepo = _unitOfWork.GetRepository<Documents, int>();
+
+            var user = await userRepo.GetByIdAsync(userId);
+
+            // validation
+            if (user == null || user.RoleS != RoleS.Lawyer)
+                return ServiceResponse<string>.Fail("User not found");
+
+            if (user.Status != Status.Blocked)
+                return ServiceResponse<string>.Fail("You can only resubmit after rejection");
+
+            if (files == null || files.Count == 0)
+                return ServiceResponse<string>.Fail("No files uploaded");
+
+            if (types == null || types.Count != files.Count)
+                return ServiceResponse<string>.Fail("Each file must have a type");
+
+            // Required docs
+            var requiredTypes = new[]
+            {
+                DocumentType.Passport,
+                DocumentType.SyndicateCard,
+                DocumentType.LawyerLicense
+            };
+
+            var uploadedTypes = types.Distinct().ToList();
+
+            foreach (var required in requiredTypes)
+            {
+                if (!uploadedTypes.Contains(required))
+                    return ServiceResponse<string>.Fail($"Missing required document: {required}");
+            }
+
+            // delete old
+            var oldDocs = (await docRepo.GetAsync(d => d.Lawyer_Id == userId)).ToList();
+
+            foreach (var doc in oldDocs)
+                docRepo.Delete(doc);
+
+            //upload new
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx" };
+
+            for (int i = 0; i < files.Count; i++)
+            {
+                var file = files[i];
+                var type = types[i];
+
+                var ext = Path.GetExtension(file.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(ext))
+                    return ServiceResponse<string>.Fail("Invalid file type");
+
+                if (file.Stream.Length > 5 * 1024 * 1024)
+                    return ServiceResponse<string>.Fail("File too large (max 5MB)");
+
+                var url = await _fileService.UploadFileAsync(
+                    file.Stream,
+                    file.FileName
+                );
+
+                await docRepo.AddAsync(new Documents
+                {
+                    Lawyer_Id = userId,
+                    Document_URL = url,
+                    Document_Type = type
+                });
+            }
+
+            // update status
+            user.Status = Status.Waiting;
+
+            if (user is Lawyer lawyer)
+                lawyer.RejectionReason = null;
+
+            userRepo.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ServiceResponse<string>.SuccessResult("Documents resubmitted successfully");
+        }
+
+
     }
 }
