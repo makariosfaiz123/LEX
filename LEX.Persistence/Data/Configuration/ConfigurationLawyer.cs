@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -28,6 +29,12 @@ namespace LEX.Domain.Configuration
                 .WithOne(r => r.Lawyer)
                 .HasForeignKey(r => r.LawyerId)
                 .OnDelete(DeleteBehavior.Restrict);
+            // ربط المحامي بالموقع (One-to-Many)
+
+            builder.HasOne(l => l.Location)
+            .WithMany(loc => loc.Lawyers)
+            .HasForeignKey(l => l.LocationId)
+            .OnDelete(DeleteBehavior.SetNull); // لو مسحنا الـ Location من الداتا بيز، عنوان المحامي يبقى Null بدل ما يمسح المحامي نفسه
         }
     }
 

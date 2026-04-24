@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LEX.Domain.EnumS;
 
-namespace LEX.Shared.DTOs.AuthenticationForgotPassword
+namespace LEX.Shared.DTOs.AuthenticationRegister
 {
     public class RegisterCustomerDto
     {

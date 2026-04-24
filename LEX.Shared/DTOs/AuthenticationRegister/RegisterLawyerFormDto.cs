@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LEX.Domain.EnumS;
 using Microsoft.AspNetCore.Http;
 
-namespace LEX.Shared.DTOs.AuthenticationForgotPassword
+namespace LEX.Shared.DTOs.AuthenticationRegister // يفضل تعدل النيم سبيس لـ Register بدل ForgotPassword
 {
     public class RegisterLawyerFormDto
     {
@@ -24,6 +21,17 @@ namespace LEX.Shared.DTOs.AuthenticationForgotPassword
         [Required] public DateOnly? StartPractice { get; set; }
         [Required] public List<string> Specializations { get; set; } = new();
 
+        // ==========================
+        // بيانات الموقع (Location Data)
+        // ==========================
+        public string? Country { get; set; } = "Egypt"; // افتراضي
+        [Required] public string Governorate { get; set; } = string.Empty;
+        [Required] public string City { get; set; } = string.Empty;
+        public string? Street { get; set; }
+
+        // ==========================
+        // الملفات المطلوبة
+        // ==========================
         [Required] public IFormFile NationalIdFront { get; set; } = null!;
         [Required] public IFormFile NationalIdBack { get; set; } = null!;
         [Required] public IFormFile SyndicateCard { get; set; } = null!;

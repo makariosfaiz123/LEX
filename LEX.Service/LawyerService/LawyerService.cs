@@ -96,7 +96,6 @@ namespace LEX.Service.LawyerService
 
             return ServiceResponse<List<SpecializationDto>>.SuccessResult(result);
         }
-
         public async Task<ServiceResponse<LawyerDetailsDto>> GetLawyerDetailsAsync(int lawyerId)
         {
             var lawyer = await _lawyerRepo.GetLawyerWithDetailsAsync(lawyerId);
@@ -104,35 +103,55 @@ namespace LEX.Service.LawyerService
             if (lawyer == null)
                 return ServiceResponse<LawyerDetailsDto>.Fail("Lawyer not found");
 
-            // ⭐ Rating
-            double rating = 0;
-            int reviewsCount = lawyer.Reviews.Count;
+            // 1. حساب التقييم بأمان
+            var reviews = lawyer.Reviews ?? new List<Review>();
+            double rating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
 
-            if (reviewsCount > 0)
-                rating = lawyer.Reviews.Average(r => r.Rating);
+            // 2. حساب سنوات الخبرة بشكل متوافق مع DateOnly
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var experienceYears = today.Year - lawyer.Start_Practice.Year;
 
+            // لو لسه مجاش يوم التخرج/بداية العمل في السنة الحالية، بنقص سنة
+            if (today.DayOfYear < lawyer.Start_Practice.DayOfYear)
+            {
+                experienceYears--;
+            }
+
+            // 3. بناء الـ DTO
             var result = new LawyerDetailsDto
             {
                 Id = lawyer.Id,
-                Name = $"{lawyer.Fname} {lawyer.Lname}",
+                Name = $"{lawyer.Fname} {lawyer.Lname}".Trim(),
 
                 Specializations = EnumHelper.GetSpecializationsList(lawyer.Specialization),
 
                 ProfileImage = lawyer.Porfile_Image,
-
                 Rating = Math.Round(rating, 1),
-                ReviewsCount = reviewsCount,
+                ReviewsCount = reviews.Count,
 
-                YearsOfExperience = DateTime.Now.Year - lawyer.Start_Practice.Year
-                 - (DateTime.Now.DayOfYear < lawyer.Start_Practice.DayOfYear ? 1 : 0),
+                // لو بالغلط تاريخ البداية كان في المستقبل، بنخليها 0
+                YearsOfExperience = experienceYears < 0 ? 0 : experienceYears,
 
                 About = lawyer.About,
                 Education = lawyer.Education,
 
-                Reviews = lawyer.Reviews.Select(r => new ReviewDto
+                // ==========================
+                // Location FIX (Direct Access)
+                // ==========================
+                Street = lawyer.Location?.Street,
+                City = lawyer.Location?.City?.Name,
+                Governorate = lawyer.Location?.Governorate?.Name, // 💡 تعديل: وصول مباشر للمحافظة
+                Country = lawyer.Location?.Country?.Name,         // 💡 تعديل: وصول مباشر للدولة
+
+                // ==========================
+                // Reviews Mapping
+                // ==========================
+                Reviews = reviews.Select(r => new ReviewDto
                 {
                     Id = r.Id,
-                    CustomerName = $"{r.Customer.Fname} {r.Customer.Lname}",
+                    CustomerName = r.Customer != null
+                        ? $"{r.Customer.Fname} {r.Customer.Lname}".Trim()
+                        : "Unknown",
                     Rating = r.Rating,
                     Comment = r.Comment,
                     CreatedAt = r.CreatedAt,
@@ -141,6 +160,5 @@ namespace LEX.Service.LawyerService
 
             return ServiceResponse<LawyerDetailsDto>.SuccessResult(result);
         }
-
     }
 }

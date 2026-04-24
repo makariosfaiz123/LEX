@@ -1,0 +1,75 @@
+new Country {
+    Name =
+    "Egypt",
+    Governorates =
+    new List<Governorate>
+    {
+        new Governorate
+        {
+            Name =
+            "Sohag",
+            Cities =
+            new List<City>
+            {
+                new City
+                {
+                    Name =
+                    "Jirja"
+                },
+                new City
+                {
+                    Name =
+                    "Sohag City"
+                },
+            }
+        },
+        new Governorate
+        {
+            Name =
+            "Cairo",
+            Cities =
+            new List<City>
+            {
+                new City
+                {
+                    Name =
+                    "Nasr City"
+                },
+                new City
+                {
+                    Name =
+                    "Maadi"
+                },
+            }
+        },
+        // المحافظات اللي تم إضافتها بناءً على ملف الـ JSON
+        new Governorate
+        {
+            Name =
+            "Alexandria",
+            Cities =
+            new List<City>
+            {
+                new City
+                {
+                    Name =
+                    "Smouha"
+                }
+            }
+        },
+        new Governorate
+        {
+            Name =
+            "Giza",
+            Cities =
+            new List<City>
+            {
+                new City
+                {
+                    Name =
+                    "Dokki"
+                }
+            }
+        }
+    }
+};

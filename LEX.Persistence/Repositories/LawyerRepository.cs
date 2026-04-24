@@ -22,10 +22,11 @@ namespace LEX.Persistence.Repositories
         public async Task<Lawyer> GetLawyerWithDetailsAsync(int id)
         {
             return await _context.Lawyers
-                .Include(l => l.Reviews)
-                    .ThenInclude(r => r.Customer)
-                .Include(l => l.Documents) 
-                .FirstOrDefaultAsync(l => l.Id == id);
+            .Include(l => l.Location).ThenInclude(loc => loc.Country)
+            .Include(l => l.Location).ThenInclude(loc => loc.Governorate)
+            .Include(l => l.Location).ThenInclude(loc => loc.City)
+            .Include(l => l.Reviews).ThenInclude(r => r.Customer)
+            .FirstOrDefaultAsync(l => l.Id == id);
         }
 
     }

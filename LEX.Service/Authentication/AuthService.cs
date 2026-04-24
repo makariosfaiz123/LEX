@@ -71,7 +71,7 @@ namespace LEX.Service.Authentication
                 //gender = (Gender)dto.Gender,
                 // Porfile_Image = dto.ProfileImage,
                 RoleS = RoleS.Customer,
-                Status = Status.Waiting,
+                Status = Status.Active,
                 OtpCode = verificationToken,
                 OtpExpiry = DateTime.UtcNow.AddMinutes(20), // ⏱️ 20 دقيقة
                 IsVerified = false
@@ -87,10 +87,15 @@ namespace LEX.Service.Authentication
         }
 
         public async Task<ServiceResponse<RegisterResponseDto>> RegisterLawyerAsync(
-            RegisterLawyerFormDto dto, List<(Stream Stream, string FileName, DocumentType Type)> documents)
+    RegisterLawyerFormDto dto, List<(Stream Stream, string FileName, DocumentType Type)> documents)
         {
             var userRepo = _unitOfWork.GetRepository<Users, int>();
             var docRepo = _unitOfWork.GetRepository<Documents, int>();
+            var locRepo = _unitOfWork.GetRepository<Location, int>();
+
+            // ضفنا الـ Repo بتاع المدن عشان نجيب الـ ID
+            var cityRepo = _unitOfWork.GetRepository<City, int>();
+
             var baseUrl = "https://localhost:5232";
 
             var existingUser = (await userRepo.GetAsync(u => u.Email == dto.Email)).FirstOrDefault();
@@ -102,7 +107,7 @@ namespace LEX.Service.Authentication
             if (existingUser != null && !existingUser.IsVerified)
             {
                 existingUser.OtpCode = verificationToken;
-                existingUser.OtpExpiry = DateTime.UtcNow.AddMinutes(20); // ⏱️ 20 دقيقة
+                existingUser.OtpExpiry = DateTime.UtcNow.AddMinutes(20);
                 await _unitOfWork.SaveChangesAsync();
 
                 string resendLink = $"{baseUrl}/api/auth/verify-email?userId={existingUser.Id}&token={verificationToken}";
@@ -126,6 +131,33 @@ namespace LEX.Service.Authentication
                 if (Enum.TryParse<Specializations>(spec, out var parsed)) specs |= parsed;
             }
 
+            // ==========================================
+            // معالجة بيانات الموقع (Location Handling Update)
+            // ==========================================
+
+            // 1. البحث عن المدينة في الداتا بيز عشان نجيب الـ CityId
+            var city = (await cityRepo.GetAsync(c => c.Name == dto.City)).FirstOrDefault();
+
+            if (city == null)
+            {
+                return ServiceResponse<RegisterResponseDto>.Fail("City not found. Please select a valid city.");
+            }
+
+            // 2. فحص إذا كان العنوان ده (نفس الشارع في نفس المدينة) متسجل قبل كده
+            var existingLocation = (await locRepo.GetAsync(l =>
+                l.CityId == city.Id &&
+                l.Street == dto.Street)).FirstOrDefault();
+
+            // 3. لو مش موجود، ننشئ واحد جديد باستخدام CityId
+            Location lawyerLocation = existingLocation ?? new Location
+            {
+                Street = dto.Street,
+                CityId = city.Id
+            };
+
+            // ==========================================
+            // إنشاء حساب المحامي
+            // ==========================================
             var lawyer = new Lawyer
             {
                 Fname = dto.Fname,
@@ -135,15 +167,19 @@ namespace LEX.Service.Authentication
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 RoleS = RoleS.Lawyer,
                 Status = Status.Waiting,
-                Start_Practice = dto.StartPractice.Value,
+
+                // تحويل الـ DateTime لـ DateOnly لو دي متطلبات الـ Entity بتاعتك
+                Start_Practice = (DateOnly)dto.StartPractice,
+
                 Specialization = specs,
                 OtpCode = verificationToken,
-                OtpExpiry = DateTime.UtcNow.AddMinutes(20), // ⏱️ 20 دقيقة
-                IsVerified = false
+                OtpExpiry = DateTime.UtcNow.AddMinutes(20),
+                IsVerified = false,
+                Location = lawyerLocation // ربطنا المحامي بالـ Location الجديد أو الموجود
             };
 
             await userRepo.AddAsync(lawyer);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(); // الـ EF Core هيتكفل بحفظ الـ Location الجديد تلقائياً 
 
             // رفع الملفات
             foreach (var doc in documents)

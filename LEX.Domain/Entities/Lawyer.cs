@@ -21,6 +21,11 @@ namespace LEX.Domain.Entities
         public Specializations Specialization { get; set; }
         public string About { get; set; }
         public string Education { get; set; }
+        // ==========================
+        // الربط مع جدول الـ Location
+        // ==========================
+        public int? LocationId { get; set; } // Foreign Key (Nullable عشان مش إجباري وقت التسجيل)
+        public Location? Location { get; set; } // Navigation Property
         //public Status Status { get; set; } = Status.Waiting;
     }
 }

@@ -80,6 +80,45 @@ namespace LEX.Persistence.Migrations
                     b.ToTable("CaseRequests");
                 });
 
+            modelBuilder.Entity("LEX.Domain.Entities.City", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("GovernorateId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GovernorateId");
+
+                    b.ToTable("Cities");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.Country", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Countries");
+                });
+
             modelBuilder.Entity("LEX.Domain.Entities.Documents", b =>
                 {
                     b.Property<int>("Id")
@@ -103,6 +142,59 @@ namespace LEX.Persistence.Migrations
                     b.HasIndex("Lawyer_Id");
 
                     b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.Governorate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CountryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountryId");
+
+                    b.ToTable("Governorates");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.Location", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CountryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GovernorateId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Street")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CityId");
+
+                    b.HasIndex("CountryId");
+
+                    b.HasIndex("GovernorateId");
+
+                    b.ToTable("Locations");
                 });
 
             modelBuilder.Entity("LEX.Domain.Entities.Notification", b =>
@@ -261,11 +353,16 @@ namespace LEX.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Specialization")
                         .HasColumnType("int");
 
                     b.Property<DateOnly>("Start_Practice")
                         .HasColumnType("date");
+
+                    b.HasIndex("LocationId");
 
                     b.HasDiscriminator().HasValue("Lawyer");
                 });
@@ -300,6 +397,17 @@ namespace LEX.Persistence.Migrations
                     b.Navigation("Lawyer");
                 });
 
+            modelBuilder.Entity("LEX.Domain.Entities.City", b =>
+                {
+                    b.HasOne("LEX.Domain.Entities.Governorate", "Governorate")
+                        .WithMany("Cities")
+                        .HasForeignKey("GovernorateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Governorate");
+                });
+
             modelBuilder.Entity("LEX.Domain.Entities.Documents", b =>
                 {
                     b.HasOne("LEX.Domain.Entities.Lawyer", "Lawyer")
@@ -309,6 +417,44 @@ namespace LEX.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Lawyer");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.Governorate", b =>
+                {
+                    b.HasOne("LEX.Domain.Entities.Country", "Country")
+                        .WithMany("Governorates")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Country");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.Location", b =>
+                {
+                    b.HasOne("LEX.Domain.Entities.City", "City")
+                        .WithMany()
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LEX.Domain.Entities.Country", "Country")
+                        .WithMany()
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LEX.Domain.Entities.Governorate", "Governorate")
+                        .WithMany()
+                        .HasForeignKey("GovernorateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("City");
+
+                    b.Navigation("Country");
+
+                    b.Navigation("Governorate");
                 });
 
             modelBuilder.Entity("LEX.Domain.Entities.Review", b =>
@@ -330,9 +476,34 @@ namespace LEX.Persistence.Migrations
                     b.Navigation("Lawyer");
                 });
 
+            modelBuilder.Entity("LEX.Domain.Entities.Lawyer", b =>
+                {
+                    b.HasOne("LEX.Domain.Entities.Location", "Location")
+                        .WithMany("Lawyers")
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Location");
+                });
+
             modelBuilder.Entity("LEX.Domain.Entities.CaseRequest", b =>
                 {
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.Country", b =>
+                {
+                    b.Navigation("Governorates");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.Governorate", b =>
+                {
+                    b.Navigation("Cities");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.Location", b =>
+                {
+                    b.Navigation("Lawyers");
                 });
 
             modelBuilder.Entity("LEX.Domain.Entities.Customer", b =>

@@ -31,6 +31,17 @@ namespace LEX.Persistence.Data.Context
                 .HasForeignKey(d => d.CaseRequestId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<City>()
+                .HasOne(c => c.Governorate)
+                .WithMany(g => g.Cities)
+                .HasForeignKey(c => c.GovernorateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Governorate>()
+                .HasOne(g => g.Country)
+                .WithMany(c => c.Governorates)
+                .HasForeignKey(g => g.CountryId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
 
         public DbSet<Users> Users { get; set; }
@@ -40,7 +51,13 @@ namespace LEX.Persistence.Data.Context
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Documents> Documents { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-
-
+        // ==========================
+        // الجداول الجديدة (Locations)
+        // ==========================
+        public DbSet<Country> Countries { get; set; }
+        public DbSet<Governorate> Governorates { get; set; }
+        public DbSet<City> Cities { get; set; }
+        public DbSet<Location> Locations { get; set; } // لو قررت تعمل جدول منفصل للـ Location
     }
+
 }
