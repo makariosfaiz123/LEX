@@ -67,11 +67,11 @@ namespace LEX.Service.Authentication
                 Email = dto.Email,
                 Phone = dto.Phone,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Date_Of_Birth = (DateOnly)dto.DateOfBirth,
-                gender = (Gender)dto.Gender,
-                Porfile_Image = dto.ProfileImage,
+                //Date_Of_Birth = (DateOnly)dto.DateOfBirth,
+                //gender = (Gender)dto.Gender,
+                // Porfile_Image = dto.ProfileImage,
                 RoleS = RoleS.Customer,
-                Status = Status.Active,
+                Status = Status.Waiting,
                 OtpCode = verificationToken,
                 OtpExpiry = DateTime.UtcNow.AddMinutes(20), // ⏱️ 20 دقيقة
                 IsVerified = false
