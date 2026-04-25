@@ -19,6 +19,9 @@ namespace LEX.Shared.DTOs.Admin
         public string? Education { get; set; }
         public int YearsOfExperience { get; set; }
 
+        public string Specialization { get; set; } 
+        public string Status { get; set; } 
+
         public List<DocumentDto> Documents { get; set; }
     }
 }

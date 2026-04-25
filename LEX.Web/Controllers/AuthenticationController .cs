@@ -45,7 +45,8 @@ namespace LEX.Web.Controllers
             return Ok(new
             {
                 status = lawyer.Status.ToString(),
-                reason = lawyer.RejectionReason
+                reason = lawyer.RejectionReason ?? "",
+                canResubmit = lawyer.Status == Status.Blocked
             });
         }
 

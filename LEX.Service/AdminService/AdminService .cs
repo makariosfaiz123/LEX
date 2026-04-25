@@ -46,7 +46,8 @@ namespace LEX.Service.AdminService
                 About = l.About,
                 Education = l.Education,
                 YearsOfExperience = DateTime.Now.Year - l.Start_Practice.Year,
-
+                Specialization = l.Specialization.ToString(), 
+                Status = l.Status.ToString(), 
                 Documents = l.Documents.Select(d => new DocumentDto
                 {
                     Id = d.Id,
@@ -103,6 +104,74 @@ namespace LEX.Service.AdminService
             await _unitOfWork.SaveChangesAsync();
 
             return ServiceResponse<string>.SuccessResult("Lawyer rejected");
+        }
+
+        public async Task<ServiceResponse<PendingLawyerDto>> GetLawyerDetailsAsync(int id)
+        {
+            var repo = _unitOfWork.GetRepository<Lawyer, int>();
+
+            var lawyer = (await repo.GetAsync(
+                l => l.Id == id,
+                null,
+                null,
+                null,
+                l => l.Documents
+            )).FirstOrDefault();
+
+            if (lawyer == null)
+                return ServiceResponse<PendingLawyerDto>.Fail("Lawyer not found");
+
+            var result = new PendingLawyerDto
+            {
+                Id = lawyer.Id,
+                Name = $"{lawyer.Fname} {lawyer.Lname}",
+                Email = lawyer.Email,
+                Phone = lawyer.Phone,
+                ProfileImage = lawyer.Porfile_Image,
+
+                About = lawyer.About,
+                Education = lawyer.Education,
+                YearsOfExperience = DateTime.Now.Year - lawyer.Start_Practice.Year,
+                Specialization = lawyer.Specialization.ToString(),
+                Status = lawyer.Status.ToString(),
+                Documents = lawyer.Documents.Select(d => new DocumentDto
+                {
+                    Id = d.Id,
+                    Url = d.Document_URL,
+                    Type = d.Document_Type.ToString()
+                }).ToList()
+            };
+
+            return ServiceResponse<PendingLawyerDto>.SuccessResult(result);
+        }
+
+        public async Task<ServiceResponse<AdminDashboardDto>> GetDashboardAsync()
+        {
+            var userRepo = _unitOfWork.GetRepository<Users, int>();
+            var lawyerRepo = _unitOfWork.GetRepository<Lawyer, int>();
+
+            var users = await userRepo.GetAsync();
+
+            var totalLawyers = users.Count(u =>
+                u.RoleS == RoleS.Lawyer && u.Status == Status.Active
+            );
+
+            var totalCustomers = users.Count(u =>
+                u.RoleS == RoleS.Customer
+            );
+
+            var newRequests = (await lawyerRepo.GetAsync(
+                l => l.Status == Status.Waiting
+            )).Count();
+
+            var result = new AdminDashboardDto
+            {
+                TotalLawyers = totalLawyers,
+                TotalCustomers = totalCustomers,
+                NewRequests = newRequests
+            };
+
+            return ServiceResponse<AdminDashboardDto>.SuccessResult(result);
         }
     }
 }
