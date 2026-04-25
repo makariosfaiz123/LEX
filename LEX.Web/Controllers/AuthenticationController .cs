@@ -40,10 +40,10 @@ namespace LEX.Web.Controllers
 
         [HttpPost("register-documents")]
         public async Task<IActionResult> RegisterDocuments(
-    [FromForm] int lawyerId,
-    [FromForm] List<IFormFile> files,
-    [FromForm] List<string> types
-)
+                [FromForm] int lawyerId,
+                [FromForm] List<IFormFile> files,
+                [FromForm] List<string> types
+            )
         {
             if (files == null || types == null || files.Count != types.Count)
                 return BadRequest("Each file must have a corresponding type");

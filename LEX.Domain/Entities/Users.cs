@@ -29,7 +29,7 @@ namespace LEX.Domain.Entities
         public DateOnly Date_Of_Birth { get; set; }
 
         public string? Porfile_Image { get; set; }
-        public Status Status { get; set; }
+        public Status Status { get; set; } = Status.Waiting;
         public RoleS RoleS { get; set; }
         public string PasswordHash { get; set; }
         public string? OtpCode { get; set; }

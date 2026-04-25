@@ -22,5 +22,12 @@ namespace LEX.Service_Abstraction
         );
 
         Task<ServiceResponse<List<DocumentDto>>> GetMyDocumentsAsync(int userId);
+
+
+        Task<ServiceResponse<string>> ResubmitDocumentsAsync(
+             int userId,
+             List<(Stream Stream, string FileName)> files,
+             List<DocumentType> types
+         );
     }
 }

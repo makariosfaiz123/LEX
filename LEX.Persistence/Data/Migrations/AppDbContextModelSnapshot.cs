@@ -261,6 +261,9 @@ namespace LEX.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Specialization")
                         .HasColumnType("int");
 

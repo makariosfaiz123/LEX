@@ -4,6 +4,7 @@ using LEX.Persistence.Data.Context;
 using LEX.Persistence.Data.DataSeed;
 using LEX.Persistence.Repositories;
 using LEX.Service;
+using LEX.Service.AdminService;
 using LEX.Service.Authentication;
 using LEX.Service.CaseRequests;
 using LEX.Service.LawyerService;
@@ -12,6 +13,7 @@ using LEX.Service.Security;
 using LEX.Service_Abstraction;
 using LEX.Service_Abstraction.Authentication;
 using LEX.Service_Abstraction.CaseRequests;
+using LEX.Service_Abstraction.IAdminService;
 using LEX.Service_Abstraction.IAuthentication;
 using LEX.Service_Abstraction.ILawyerService;
 using LEX.Service_Abstraction.IReviewService;
@@ -93,6 +95,7 @@ namespace LEX.Web
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IFileService, FileService>();
             builder.Services.AddScoped<IDocumentService, DocumentService>();
+            builder.Services.AddScoped<IAdminService, AdminService>();
 
 
 
@@ -135,9 +138,16 @@ namespace LEX.Web
             #region Dataseeding
 
             await using var scope = app.Services.CreateAsyncScope();
-            var objectsToSeed = scope.ServiceProvider.GetRequiredService<DataSeeding>();
+
+            var services = scope.ServiceProvider;
+
+            // DataSeeding
+            var objectsToSeed = services.GetRequiredService<DataSeeding>();
             await objectsToSeed.DataSeed();
 
+            // Admin Seed
+            var context = services.GetRequiredService<AppDbContext>();
+            await AdminSeeder.SeedAsync(context);
             #endregion
 
 
