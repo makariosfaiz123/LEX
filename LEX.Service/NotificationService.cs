@@ -21,7 +21,13 @@ namespace LEX.Service
             _unitOfWork = unitOfWork;
         }
 
-        public async Task AddNotificationAsync(int userId, string title, string message, NotificationType type)
+        public async Task AddNotificationAsync(
+            int userId,
+            string title,
+            string message,
+            NotificationType type,
+            int? caseRequestId = null
+        )
         {
             var repo = _unitOfWork.GetRepository<Notification, int>();
 
@@ -30,7 +36,8 @@ namespace LEX.Service
                 UserId = userId,
                 Title = title,
                 Message = message,
-                Type = type
+                Type = type,
+                CaseRequestId = caseRequestId 
             };
 
             await repo.AddAsync(notification);
@@ -42,21 +49,22 @@ namespace LEX.Service
             var repo = _unitOfWork.GetRepository<Notification, int>();
 
             var data = await repo.GetAsync(
-                n => n.UserId == userId,
-                q => q.OrderByDescending(n => n.CreatedAt)
-            );
+                    n => n.UserId == userId,
+                    q => q.OrderByDescending(n => n.CreatedAt)
+                );
 
-            var result = data.Select(n => new NotificationDto
-            {
-                Id = n.Id,
-                Title = n.Title,
-                Message = n.Message,
-                Type = n.Type.ToString(),
-                IsRead = n.IsRead,
-                CreatedAt = n.CreatedAt
-            }).ToList();
+                var result = data.Select(n => new NotificationDto
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Message = n.Message,
+                    Type = n.Type.ToString(),
+                    IsRead = n.IsRead,
+                    CreatedAt = n.CreatedAt,
+                    CaseRequestId = n.CaseRequestId
+                }).ToList();
 
-            return ServiceResponse<List<NotificationDto>>.SuccessResult(result);
-        }
+                return ServiceResponse<List<NotificationDto>>.SuccessResult(result);
+            }
     }
 }

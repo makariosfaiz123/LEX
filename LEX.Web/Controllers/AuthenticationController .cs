@@ -1,4 +1,6 @@
-﻿using LEX.Domain.EnumS;
+﻿using LEX.Domain.Entities;
+using LEX.Domain.EnumS;
+using LEX.Domain.Interfaces;
 using LEX.Service_Abstraction.Authentication;
 using LEX.Shared.DTOs.AuthenticationForgotPassword;
 using LEX.Shared.DTOs.AuthenticationLogin;
@@ -16,11 +18,37 @@ namespace LEX.Web.Controllers
     public class AuthenticationController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public AuthenticationController(IAuthService authService)
+        public AuthenticationController(IAuthService authService , IUnitOfWork unitOfWork)
         {
             _authService = authService;
+            _unitOfWork = unitOfWork;
         }
+
+
+        [HttpGet("check-status")]
+        public async Task<IActionResult> CheckStatus(int userId)
+        {
+            var userRepo = _unitOfWork.GetRepository<Users, int>();
+
+            var user = await userRepo.GetByIdAsync(userId);
+
+            if (user == null)
+                return NotFound("User not found");
+
+            if (user.RoleS != RoleS.Lawyer)
+                return BadRequest("Not a lawyer");
+
+            var lawyer = user as Lawyer;
+
+            return Ok(new
+            {
+                status = lawyer.Status.ToString(),
+                reason = lawyer.RejectionReason
+            });
+        }
+
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto dto)

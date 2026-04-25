@@ -99,5 +99,19 @@ namespace LEX.Web.Controllers
 
             return Ok(result);
         }
+
+        [Authorize]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetCaseById(int id)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+            var result = await _caseService.GetCaseDetailsAsync(id, userId);
+
+            if (!result.Success)
+                return NotFound(result);
+
+            return Ok(result);
+        }
     }
 }

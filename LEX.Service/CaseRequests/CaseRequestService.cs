@@ -154,7 +154,8 @@ namespace LEX.Service.CaseRequests
                     caseRequest.CustomerId,
                     "Request Accepted",
                     $"Your request has been accepted by Dr. {caseRequest.Lawyer.Fname} {caseRequest.Lawyer.Lname}.",
-                    NotificationType.Success
+                    NotificationType.Success,
+                    caseRequest.Id
                 );
                 //  هنا بعدين هنفتح Chat
                 // ممكن تعمل CreateChat هنا
@@ -167,7 +168,8 @@ namespace LEX.Service.CaseRequests
                     caseRequest.CustomerId,
                     "Request Declined",
                     "Your request was declined. Please try another lawyer.",
-                    NotificationType.Error
+                    NotificationType.Error,
+                    caseRequest.Id
                 );
             }
 
@@ -236,6 +238,38 @@ namespace LEX.Service.CaseRequests
             };
 
             return ServiceResponse<CaseDetailsDto>.SuccessResult(result);
+        }
+
+        public async Task<ServiceResponse<object>> GetCaseDetailsAsync(int caseId, int userId)
+        {
+            var caseRepo = _unitOfWork.GetRepository<CaseRequest, int>();
+
+            var caseRequest = (await caseRepo.GetAsync(
+                c => c.Id == caseId,
+                null,
+                null,
+                null,
+                c => c.Lawyer,
+                c => c.Customer
+            )).FirstOrDefault();
+
+            if (caseRequest == null)
+                return ServiceResponse<object>.Fail("Case not found");
+
+            // 🔥 أهم سطر
+            if (caseRequest.LawyerId != userId && caseRequest.CustomerId != userId)
+                return ServiceResponse<object>.Fail("Unauthorized");
+
+            return ServiceResponse<object>.SuccessResult(new
+            {
+                caseRequest.Id,
+                caseRequest.Description,
+                caseRequest.Status,
+                caseRequest.CreatedAt,
+
+                Lawyer = $"{caseRequest.Lawyer.Fname} {caseRequest.Lawyer.Lname}",
+                Customer = $"{caseRequest.Customer.Fname} {caseRequest.Customer.Lname}"
+            });
         }
 
     }

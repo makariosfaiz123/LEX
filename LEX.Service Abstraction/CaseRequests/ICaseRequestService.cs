@@ -19,5 +19,7 @@ namespace LEX.Service_Abstraction.CaseRequests
 
         Task<ServiceResponse<List<CustomerCaseDto>>> GetCustomerCasesAsync(int customerId);
         Task<ServiceResponse<CaseDetailsDto>> GetCaseDetailsForLawyerAsync(int caseId, int lawyerId);
+
+        Task<ServiceResponse<object>> GetCaseDetailsAsync(int caseId, int userId);
     }
 }
