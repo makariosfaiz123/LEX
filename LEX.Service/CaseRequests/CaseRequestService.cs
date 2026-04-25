@@ -19,14 +19,20 @@ namespace LEX.Service.CaseRequests
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationService _notificationService;
+        private readonly IFileService _fileService;
 
-        public CaseRequestService(IUnitOfWork unitOfWork,INotificationService notificationService)
+        public CaseRequestService(IUnitOfWork unitOfWork,INotificationService notificationService,IFileService fileService)
         {
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
+            _fileService = fileService;
         }
 
-        public async Task<ServiceResponse<string>> CreateCaseAsync(CreateCaseRequestDto dto, int userId)
+        public async Task<ServiceResponse<string>> CreateCaseAsync(
+                CreateCaseRequestDto dto,
+                int userId,
+                List<(Stream Stream, string FileName)> files
+            )
         {
             var caseRepo = _unitOfWork.GetRepository<CaseRequest, int>();
             var lawyerRepo = _unitOfWork.GetRepository<Lawyer, int>();
@@ -63,6 +69,34 @@ namespace LEX.Service.CaseRequests
             if (hasPendingCase)
                 return ServiceResponse<string>.Fail("You already sent a request to this lawyer");
 
+            //Handle Documents
+            var documents = new List<CaseDocument>();
+
+            if (files != null && files.Any())
+            {
+                var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".jpg", ".png" };
+
+                foreach (var file in files)
+                {
+                    var ext = Path.GetExtension(file.FileName).ToLower();
+
+                    if (!allowedExtensions.Contains(ext))
+                        return ServiceResponse<string>.Fail("Invalid file type");
+
+                    if (file.Stream.Length > 5 * 1024 * 1024)
+                        return ServiceResponse<string>.Fail("File too large (max 5MB)");
+
+                    var url = await _fileService.UploadFileAsync(
+                        file.Stream,
+                        file.FileName
+                    );
+
+                    documents.Add(new CaseDocument
+                    {
+                        FileUrl = url
+                    });
+                }
+            }
             //Create Case
             var caseRequest = new CaseRequest
             {
@@ -72,12 +106,9 @@ namespace LEX.Service.CaseRequests
                 Description = dto.Description,
                 Status = CaseStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
-                Documents = dto.Documents?
-                    .Where(d => !string.IsNullOrWhiteSpace(d))
-                    .Select(doc => new CaseDocument { FileUrl = doc.Trim() })
-                    .ToList() ?? new List<CaseDocument>()
             };
-      
+
+            caseRequest.Documents = documents;
 
             await caseRepo.AddAsync(caseRequest);
             await _unitOfWork.SaveChangesAsync();
@@ -192,7 +223,8 @@ namespace LEX.Service.CaseRequests
                     orderBy: q => q.OrderByDescending(c => c.CreatedAt),
                     null,
                     null,
-                    c => c.Lawyer
+                    c => c.Lawyer,
+                    c => c.Documents
                 );
 
             var result = cases.Select(c => new CustomerCaseDto
@@ -201,7 +233,10 @@ namespace LEX.Service.CaseRequests
                 LawyerName = c.Lawyer != null ? $"{c.Lawyer.Fname} {c.Lawyer.Lname}" : null,
                 CaseType = c.Case_Type.ToString(),
                 Status = c.Status.ToString(),
-                CreatedAt = c.CreatedAt
+                CreatedAt = c.CreatedAt,
+                Documents = c.Documents 
+                .Select(d => d.FileUrl)
+                .ToList()
             }).ToList();
 
             return ServiceResponse<List<CustomerCaseDto>>.SuccessResult(result);
@@ -250,13 +285,14 @@ namespace LEX.Service.CaseRequests
                 null,
                 null,
                 c => c.Lawyer,
-                c => c.Customer
+                c => c.Customer,
+                c => c.Documents
             )).FirstOrDefault();
 
             if (caseRequest == null)
                 return ServiceResponse<object>.Fail("Case not found");
 
-            // 🔥 أهم سطر
+            
             if (caseRequest.LawyerId != userId && caseRequest.CustomerId != userId)
                 return ServiceResponse<object>.Fail("Unauthorized");
 
@@ -268,7 +304,10 @@ namespace LEX.Service.CaseRequests
                 caseRequest.CreatedAt,
 
                 Lawyer = $"{caseRequest.Lawyer.Fname} {caseRequest.Lawyer.Lname}",
-                Customer = $"{caseRequest.Customer.Fname} {caseRequest.Customer.Lname}"
+                Customer = $"{caseRequest.Customer.Fname} {caseRequest.Customer.Lname}",
+                Documents = caseRequest.Documents 
+                .Select(d => d.FileUrl)
+                .ToList()
             });
         }
 

@@ -19,6 +19,6 @@ namespace LEX.Shared.DTOs.CaseRequest
         [MinLength(10)]
         public string Description { get; set; }
 
-        public List<string>? Documents { get; set; }
+        
     }
 }

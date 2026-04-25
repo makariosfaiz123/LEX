@@ -13,5 +13,6 @@ namespace LEX.Shared.DTOs.CaseRequest
         public string CaseType { get; set; }
         public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
+        public List<string> Documents { get; set; }
     }
 }
