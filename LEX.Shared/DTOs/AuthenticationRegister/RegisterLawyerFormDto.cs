@@ -24,9 +24,11 @@ namespace LEX.Shared.DTOs.AuthenticationRegister // يفضل تعدل النيم
         // ==========================
         // بيانات الموقع (Location Data)
         // ==========================
-        public string? Country { get; set; } = "Egypt"; // افتراضي
-        [Required] public string Governorate { get; set; } = string.Empty;
-        [Required] public string City { get; set; } = string.Empty;
+        public int CountryId { get; set; }
+        [Required]
+        public int GovernorateId { get; set; }
+        [Required]
+        public int CityId { get; set; }
         public string? Street { get; set; }
 
         // ==========================

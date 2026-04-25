@@ -6,6 +6,7 @@ using LEX.Service_Abstraction;
 using LEX.Service_Abstraction.CaseRequests;
 using LEX.Shared.DTOs.CaseRequest;
 using LEX.Shared.Responses;
+using Microsoft.AspNetCore.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,11 +20,13 @@ namespace LEX.Service.CaseRequests
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationService _notificationService;
-
-        public CaseRequestService(IUnitOfWork unitOfWork,INotificationService notificationService)
+        private readonly IWebHostEnvironment _webHostEnvironment; // 🔥 ضيف ده
+        public CaseRequestService(IUnitOfWork unitOfWork, INotificationService notificationService, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork;
             _notificationService = notificationService;
+            _webHostEnvironment = webHostEnvironment; // 🔥 ضيف ده
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public async Task<ServiceResponse<string>> CreateCaseAsync(CreateCaseRequestDto dto, int userId)
@@ -31,7 +34,7 @@ namespace LEX.Service.CaseRequests
             var caseRepo = _unitOfWork.GetRepository<CaseRequest, int>();
             var lawyerRepo = _unitOfWork.GetRepository<Lawyer, int>();
 
-            //Validate CaseType
+            // Validate CaseType
             if (!EnumHelper.TryParseEnum<CaseType>(dto.CaseType, out var caseType))
                 return ServiceResponse<string>.Fail("Invalid CaseType");
 
@@ -43,17 +46,16 @@ namespace LEX.Service.CaseRequests
             if (dto.Description.Length < 10)
                 return ServiceResponse<string>.Fail("Description must be at least 10 characters");
 
-            //Check Lawyer exists
+            // Check Lawyer exists
             var lawyer = await lawyerRepo.GetByIdAsync(dto.LawyerId);
-            if (lawyer == null) 
+            if (lawyer == null)
                 return ServiceResponse<string>.Fail("Lawyer not found");
-            
 
-            //Safety 
+            // Safety 
             if (dto.LawyerId == userId)
                 return ServiceResponse<string>.Fail("You can't assign case to yourself");
 
-            //Check for existing pending cases
+            // Check for existing pending cases
             var hasPendingCase = (await caseRepo.GetAsync(c =>
                 c.CustomerId == userId &&
                 c.LawyerId == dto.LawyerId &&
@@ -63,7 +65,44 @@ namespace LEX.Service.CaseRequests
             if (hasPendingCase)
                 return ServiceResponse<string>.Fail("You already sent a request to this lawyer");
 
-            //Create Case
+            // 🔥 1. معالجة وحفظ الملفات في wwwroot/uploads
+            var documentEntities = new List<CaseDocument>();
+
+            if (dto.Documents != null && dto.Documents.Any())
+            {
+                // تحديد مسار فولدر uploads
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
+
+                // لو الفولدر مش موجود، نكريته
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                foreach (var file in dto.Documents)
+                {
+                    if (file.Length > 0)
+                    {
+                        // عمل اسم فريد للملف عشان ميمسحش ملفات قديمة
+                        string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        // حفظ الملف على الهارد ديسك
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(fileStream);
+                        }
+
+                        // إضافة المسار للستة الداتا بيز (هنحفظ المسار النسبي)
+                        documentEntities.Add(new CaseDocument
+                        {
+                            FileUrl = $"/uploads/{uniqueFileName}"
+                        });
+                    }
+                }
+            }
+
+            // 🔥 2. إنشاء الطلب بالملفات المرفوعة
             var caseRequest = new CaseRequest
             {
                 CustomerId = userId,
@@ -72,12 +111,8 @@ namespace LEX.Service.CaseRequests
                 Description = dto.Description,
                 Status = CaseStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
-                Documents = dto.Documents?
-                    .Where(d => !string.IsNullOrWhiteSpace(d))
-                    .Select(doc => new CaseDocument { FileUrl = doc.Trim() })
-                    .ToList() ?? new List<CaseDocument>()
+                Documents = documentEntities // ربط الملفات هنا
             };
-      
 
             await caseRepo.AddAsync(caseRequest);
             await _unitOfWork.SaveChangesAsync();
@@ -86,29 +121,49 @@ namespace LEX.Service.CaseRequests
         }
 
 
-        public async Task<ServiceResponse<List<LawyerCaseRequestDto>>> GetRequestsForLawyerAsync(int lawyerId, string? status)
+        public async Task<ServiceResponse<List<LawyerCaseRequestDto>>> GetRequestsForLawyerAsync(int lawyerId, string? status, string? caseType)
         {
             var caseRepo = _unitOfWork.GetRepository<CaseRequest, int>();
-            
 
-            Expression<Func<CaseRequest, bool>> filter = c => c.LawyerId == lawyerId;
+            // 1. معالجة فلتر الـ Status (لو مبعوت)
+            bool filterByStatus = false;
+            CaseStatus statusEnum = default;
             if (!string.IsNullOrEmpty(status))
             {
-                if (!EnumHelper.TryParseEnum<CaseStatus>(status, out var statusEnum))
+                if (!EnumHelper.TryParseEnum<CaseStatus>(status, out statusEnum))
                     return ServiceResponse<List<LawyerCaseRequestDto>>.Fail("Invalid status");
 
-                filter = c => c.LawyerId == lawyerId && c.Status == statusEnum;
+                filterByStatus = true;
             }
 
-            var cases = await caseRepo.GetAsync(
-                   filter,
-                   q => q.OrderByDescending(c => c.CreatedAt),
-                   null,
-                   null,
-                   c => c.Customer,
-                   c => c.Documents
-                 );
+            // 2. معالجة فلتر الـ CaseType (لو مبعوت)
+            bool filterByCaseType = false;
+            CaseType caseTypeEnum = default;
+            if (!string.IsNullOrEmpty(caseType))
+            {
+                if (!EnumHelper.TryParseEnum<CaseType>(caseType, out caseTypeEnum))
+                    return ServiceResponse<List<LawyerCaseRequestDto>>.Fail("Invalid case type");
 
+                filterByCaseType = true;
+            }
+
+            // 3. بناء الفلتر المجمع (EF Core هيترجم الشروط دي بذكاء للـ SQL)
+            Expression<Func<CaseRequest, bool>> filter = c =>
+                c.LawyerId == lawyerId &&
+                (!filterByStatus || c.Status == statusEnum) &&
+                (!filterByCaseType || c.Case_Type == caseTypeEnum);
+
+            // 4. جلب البيانات من الداتا بيز
+            var cases = await caseRepo.GetAsync(
+                filter,
+                q => q.OrderByDescending(c => c.CreatedAt),
+                null,
+                null,
+                c => c.Customer,
+                c => c.Documents
+            );
+
+            // 5. تحويل البيانات لـ DTO
             var result = cases.Select(c => new LawyerCaseRequestDto
             {
                 CaseId = c.Id,
@@ -131,7 +186,7 @@ namespace LEX.Service.CaseRequests
                 null,
                 null,
                 null,
-                c => c.Lawyer 
+                c => c.Lawyer
             )).FirstOrDefault();
 
             // لو مش موجود
@@ -171,7 +226,7 @@ namespace LEX.Service.CaseRequests
                 );
             }
 
-            
+
 
             caseRepo.Update(caseRequest);
             await _unitOfWork.SaveChangesAsync();
@@ -181,6 +236,66 @@ namespace LEX.Service.CaseRequests
             );
         }
 
+        public async Task<ServiceResponse<DashboardSummaryDto>> GetLawyerDashboardSummaryAsync(int lawyerId)
+        {
+            try
+            {
+                var caseRepo = _unitOfWork.GetRepository<CaseRequest, int>();
+
+                // 🔥 كل الكيسات الخاصة بالمحامي
+                var cases = await caseRepo.GetAsync(c => c.LawyerId == lawyerId);
+
+                // 1️⃣ عدد الطلبات الجديدة (Pending)
+                int pendingCount = cases.Count(c => c.Status == CaseStatus.Pending);
+
+                // 2️⃣ عدد الطلبات المقبولة
+                int acceptedCount = cases.Count(c => c.Status == CaseStatus.Accepted);
+
+                // 3️⃣ عدد الطلبات المرفوضة
+                int rejectedCount = cases.Count(c => c.Status == CaseStatus.Rejected);
+
+                // 4️⃣ إجمالي الطلبات
+                int totalCases = cases.Count();
+
+                // 5️⃣ عدد العملاء (Distinct)
+                int clientsCount = cases
+                    .Select(c => c.CustomerId)
+                    .Distinct()
+                    .Count();
+
+                // 6️⃣ أحدث الطلبات (آخر 5)
+                var recentCases = cases
+                    .OrderByDescending(c => c.CreatedAt)
+                    .Take(5)
+                    .Select(c => new
+                    {
+                        c.Id,
+                        c.Description,
+                        Status = c.Status.ToString(),
+                        Type = c.Case_Type.ToString(),
+                        c.CreatedAt
+                    })
+                    .ToList();
+
+                var summary = new DashboardSummaryDto
+                {
+                    ClientsRequests = pendingCount,
+                    TotalCases = totalCases,
+                    AcceptedCases = acceptedCount,
+                    RejectedCases = rejectedCount,
+                    ClientsCount = clientsCount,
+                    RecentCases = recentCases
+                };
+
+                return ServiceResponse<DashboardSummaryDto>.SuccessResult(summary);
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<DashboardSummaryDto>.Fail(
+                    $"Error loading dashboard summary: {ex.Message}"
+                );
+            }
+        }
         public async Task<ServiceResponse<List<CustomerCaseDto>>> GetCustomerCasesAsync(int customerId)
         {
             var caseRepo = _unitOfWork.GetRepository<CaseRequest, int>();

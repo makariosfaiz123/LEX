@@ -1,9 +1,6 @@
 ﻿using System.Text.Json.Serialization;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LEX.Shared.DTOs.ProfileDto
 {
@@ -26,5 +23,26 @@ namespace LEX.Shared.DTOs.ProfileDto
 
         [JsonPropertyOrder(12)]
         public int ReviewsCount { get; set; }
+
+        // ==========================
+        // Location
+        // ==========================
+        [JsonPropertyOrder(13)]
+        public string? Country { get; set; }
+
+        [JsonPropertyOrder(14)]
+        public string? Governorate { get; set; }
+
+        [JsonPropertyOrder(15)]
+        public string? City { get; set; }
+
+        [JsonPropertyOrder(16)]
+        public string? Street { get; set; }
+
+        [JsonPropertyOrder(17)]
+        public string FullLocation =>
+            string.Join(", ",
+                new[] { Street, City, Governorate, Country }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
     }
 }

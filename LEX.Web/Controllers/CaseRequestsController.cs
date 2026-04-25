@@ -21,8 +21,8 @@ namespace LEX.Web.Controllers
         }
 
         [Authorize(Roles = "Customer")]
-        [HttpPost("create-Customer")]
-        public async Task<IActionResult> CreateCase([FromBody] CreateCaseRequestDto dto)
+        [HttpPost("create-Case")]
+        public async Task<IActionResult> CreateCase([FromForm] CreateCaseRequestDto dto)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
@@ -49,11 +49,11 @@ namespace LEX.Web.Controllers
 
         [Authorize(Roles = "Lawyer")]
         [HttpGet("my-requests-Lawyer")]
-        public async Task<IActionResult> GetMyRequests([FromQuery] string? status)
+        public async Task<IActionResult> GetMyRequests([FromQuery] string? status, string? caseType)
         {
             var lawyerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
-            var result = await _caseService.GetRequestsForLawyerAsync(lawyerId, status);
+            var result = await _caseService.GetRequestsForLawyerAsync(lawyerId, status, caseType);
 
             if (!result.Success)
                 return BadRequest(result);
@@ -98,6 +98,26 @@ namespace LEX.Web.Controllers
                 return NotFound(result);
 
             return Ok(result);
+        }
+        [HttpGet("dashboard-summary")]
+        // [Authorize(Roles = "Lawyer")] // متنساش الـ Authorization
+        public async Task<IActionResult> GetDashboardSummary()
+        {
+            // استخراج الـ ID بتاع المحامي من الـ Token
+            var lawyerIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(lawyerIdClaim, out int lawyerId))
+            {
+                return Unauthorized(new { message = "Invalid Token" });
+            }
+
+            var response = await _caseService.GetLawyerDashboardSummaryAsync(lawyerId);
+
+            if (response.Success)
+            {
+                return Ok(new { success = true, data = response.Data });
+            }
+
+            return BadRequest(new { success = false, message = response.Message });
         }
     }
 }

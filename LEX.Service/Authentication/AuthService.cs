@@ -92,7 +92,7 @@ namespace LEX.Service.Authentication
             var userRepo = _unitOfWork.GetRepository<Users, int>();
             var docRepo = _unitOfWork.GetRepository<Documents, int>();
             var locRepo = _unitOfWork.GetRepository<Location, int>();
-
+            var countryRepo = _unitOfWork.GetRepository<Country, int>(); // ✅ NEW
             // ضفنا الـ Repo بتاع المدن عشان نجيب الـ ID
             var cityRepo = _unitOfWork.GetRepository<City, int>();
 
@@ -136,23 +136,34 @@ namespace LEX.Service.Authentication
             // ==========================================
 
             // 1. البحث عن المدينة في الداتا بيز عشان نجيب الـ CityId
-            var city = (await cityRepo.GetAsync(c => c.Name == dto.City)).FirstOrDefault();
+            var governorateRepo = _unitOfWork.GetRepository<Governorate, int>();
 
+            var governorate = (await governorateRepo.GetAsync(g => g.Id == dto.GovernorateId)).FirstOrDefault();
+
+            if (governorate == null)
+                return ServiceResponse<RegisterResponseDto>.Fail("Governorate not found");
+            var city = (await cityRepo.GetAsync(c => c.Id == dto.CityId)).FirstOrDefault();
             if (city == null)
-            {
-                return ServiceResponse<RegisterResponseDto>.Fail("City not found. Please select a valid city.");
-            }
+                return ServiceResponse<RegisterResponseDto>.Fail("City not found");
+
+            var countryId = dto.CountryId == 0 ? 1 : dto.CountryId;
+
+            var country = (await countryRepo.GetAsync(c => c.Id == countryId)).FirstOrDefault();
+
+            if (country == null)
+                return ServiceResponse<RegisterResponseDto>.Fail("Country not found");
 
             // 2. فحص إذا كان العنوان ده (نفس الشارع في نفس المدينة) متسجل قبل كده
             var existingLocation = (await locRepo.GetAsync(l =>
                 l.CityId == city.Id &&
                 l.Street == dto.Street)).FirstOrDefault();
 
-            // 3. لو مش موجود، ننشئ واحد جديد باستخدام CityId
             Location lawyerLocation = existingLocation ?? new Location
             {
                 Street = dto.Street,
-                CityId = city.Id
+                CityId = city.Id,
+                CountryId = country.Id,
+                GovernorateId = governorate.Id
             };
 
             // ==========================================
@@ -167,15 +178,12 @@ namespace LEX.Service.Authentication
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 RoleS = RoleS.Lawyer,
                 Status = Status.Waiting,
-
-                // تحويل الـ DateTime لـ DateOnly لو دي متطلبات الـ Entity بتاعتك
                 Start_Practice = (DateOnly)dto.StartPractice,
-
                 Specialization = specs,
                 OtpCode = verificationToken,
                 OtpExpiry = DateTime.UtcNow.AddMinutes(20),
                 IsVerified = false,
-                Location = lawyerLocation // ربطنا المحامي بالـ Location الجديد أو الموجود
+                Location = lawyerLocation
             };
 
             await userRepo.AddAsync(lawyer);

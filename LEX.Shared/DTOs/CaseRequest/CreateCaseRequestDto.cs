@@ -1,4 +1,5 @@
 ﻿using LEX.Domain.EnumS;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -18,7 +19,8 @@ namespace LEX.Shared.DTOs.CaseRequest
         [Required]
         [MinLength(10)]
         public string Description { get; set; }
-
-        public List<string>? Documents { get; set; }
+        [AllowedExtensions(new[] { ".jpg", ".jpeg", ".png", ".pdf" })]
+        // 🔥 التعديل هنا: استقبال الملفات الفعلية
+        public List<IFormFile>? Documents { get; set; }
     }
 }
