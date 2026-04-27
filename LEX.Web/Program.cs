@@ -73,15 +73,15 @@ namespace LEX.Web
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
             );
-
+            builder.Services.AddSignalR();
             // AutoMapper && Repos
             builder.Services.AddAutoMapper(typeof(AuthService).Assembly);
             builder.Services.AddScoped<ILawyerRepository, LawyerRepository>();
 
-
+            // Add this line where your other services are registered
+            builder.Services.AddScoped<IChatService, ChatService>();
             //Unit of Work
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
             // Services
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<ITokenService, TokenService>();
@@ -160,7 +160,7 @@ namespace LEX.Web
 
             app.MapControllers();
             #endregion
-
+            app.MapHub<ChatHub>("/chatHub");
             app.Run();
         }
     }

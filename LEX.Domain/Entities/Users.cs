@@ -27,7 +27,7 @@ namespace LEX.Domain.Entities
         [Phone]
         public string? Phone { get; set; }
         public DateOnly Date_Of_Birth { get; set; }
-
+        public string? FcmToken { get; set; }
         public string? Porfile_Image { get; set; }
         public Status Status { get; set; }
         public RoleS RoleS { get; set; }

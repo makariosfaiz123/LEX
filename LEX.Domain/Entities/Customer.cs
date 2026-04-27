@@ -9,8 +9,9 @@ namespace LEX.Domain.Entities
     public class Customer : Users
     {
         public ICollection<CaseRequest> Case_Requests { get; set; } = [];
-            public ICollection<Review> Reviews { get; set; } = [];
+        public ICollection<Review> Reviews { get; set; } = [];
+
+        public ICollection<Conversation> Conversations { get; set; } = [];
 
     }
 }
-    

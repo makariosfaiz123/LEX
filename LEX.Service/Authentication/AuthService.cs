@@ -177,7 +177,7 @@ namespace LEX.Service.Authentication
                 Phone = dto.Phone,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 RoleS = RoleS.Lawyer,
-                Status = Status.Waiting,
+                Status = Status.Active,
                 Start_Practice = (DateOnly)dto.StartPractice,
                 Specialization = specs,
                 OtpCode = verificationToken,
@@ -499,7 +499,8 @@ namespace LEX.Service.Authentication
             {
                 Email = user.Email,
                 Token = token,
-                Role = user.RoleS.ToString() // كده هترجع "Lawyer" أو "Customer"            };
+                Role = user.RoleS.ToString(), // كده هترجع "Lawyer" أو "Customer"            };
+                Id = user.Id
             };
         }
 
@@ -609,6 +610,25 @@ namespace LEX.Service.Authentication
             await _unitOfWork.SaveChangesAsync();
 
             return "Password reset successfully";
+        }
+        public async Task<string> UpdateFcmTokenAsync(int userId, UpdateFcmTokenDto dto)
+        {
+            var userRepo = _unitOfWork.GetRepository<Users, int>();
+
+            // البحث عن المستخدم باستخدام الـ ID
+            var user = await userRepo.GetByIdAsync(userId);
+
+            if (user == null)
+                return "User not found";
+
+            // تحديث الـ Token
+            user.FcmToken = dto.FcmToken;
+
+            // تحديث وحفظ في قاعدة البيانات
+            userRepo.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            return "FCM Token updated successfully";
         }
 
     }

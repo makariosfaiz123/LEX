@@ -5,6 +5,7 @@ using LEX.Shared.DTOs.AuthenticationLogin;
 using LEX.Shared.DTOs.AuthenticationRegister;
 using LEX.Shared.DTOs.EmailOTP;
 using LEX.Web.UploadProfailDTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -128,6 +129,31 @@ namespace LEX.Web.Controllers
 
             return Ok(result);
         }
+        [Authorize] // لازم يكون عامل Login
+        [HttpPost("update-fcm-token")]
+        public async Task<IActionResult> UpdateFcmToken([FromBody] UpdateFcmTokenDto dto)
+        {
+            // استخراج الـ ID بتاع المستخدم من الـ JWT Token
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { Message = "Invalid token or user ID not found." });
+            }
+
+            if (string.IsNullOrEmpty(dto.FcmToken))
+            {
+                return BadRequest(new { Message = "FCM Token is required." });
+            }
+
+            var result = await _authService.UpdateFcmTokenAsync(userId, dto);
+
+            if (result == "User not found")
+            {
+                return NotFound(new { Message = result });
+            }
+
+            return Ok(new { Message = result });
+        }
     }
 }

@@ -102,6 +102,44 @@ namespace LEX.Persistence.Migrations
                     b.ToTable("Cities");
                 });
 
+            modelBuilder.Entity("LEX.Domain.Entities.Conversation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CaseRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FirebaseChatId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LawyerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CaseRequestId")
+                        .IsUnique();
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("LawyerId");
+
+                    b.ToTable("Conversations");
+                });
+
             modelBuilder.Entity("LEX.Domain.Entities.Country", b =>
                 {
                     b.Property<int>("Id")
@@ -197,6 +235,46 @@ namespace LEX.Persistence.Migrations
                     b.ToTable("Locations");
                 });
 
+            modelBuilder.Entity("LEX.Domain.Entities.Message", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ConversationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileExtension")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("FileSizeInBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.ToTable("Messages");
+                });
+
             modelBuilder.Entity("LEX.Domain.Entities.Notification", b =>
                 {
                     b.Property<int>("Id")
@@ -279,6 +357,9 @@ namespace LEX.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FcmToken")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Fname")
                         .IsRequired()
@@ -408,6 +489,33 @@ namespace LEX.Persistence.Migrations
                     b.Navigation("Governorate");
                 });
 
+            modelBuilder.Entity("LEX.Domain.Entities.Conversation", b =>
+                {
+                    b.HasOne("LEX.Domain.Entities.CaseRequest", "CaseRequest")
+                        .WithOne("Conversation")
+                        .HasForeignKey("LEX.Domain.Entities.Conversation", "CaseRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LEX.Domain.Entities.Customer", "Customer")
+                        .WithMany("Conversations")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LEX.Domain.Entities.Lawyer", "Lawyer")
+                        .WithMany("Conversations")
+                        .HasForeignKey("LawyerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CaseRequest");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Lawyer");
+                });
+
             modelBuilder.Entity("LEX.Domain.Entities.Documents", b =>
                 {
                     b.HasOne("LEX.Domain.Entities.Lawyer", "Lawyer")
@@ -457,6 +565,17 @@ namespace LEX.Persistence.Migrations
                     b.Navigation("Governorate");
                 });
 
+            modelBuilder.Entity("LEX.Domain.Entities.Message", b =>
+                {
+                    b.HasOne("LEX.Domain.Entities.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+                });
+
             modelBuilder.Entity("LEX.Domain.Entities.Review", b =>
                 {
                     b.HasOne("LEX.Domain.Entities.Customer", "Customer")
@@ -488,7 +607,14 @@ namespace LEX.Persistence.Migrations
 
             modelBuilder.Entity("LEX.Domain.Entities.CaseRequest", b =>
                 {
+                    b.Navigation("Conversation");
+
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("LEX.Domain.Entities.Conversation", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("LEX.Domain.Entities.Country", b =>
@@ -510,12 +636,16 @@ namespace LEX.Persistence.Migrations
                 {
                     b.Navigation("Case_Requests");
 
+                    b.Navigation("Conversations");
+
                     b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("LEX.Domain.Entities.Lawyer", b =>
                 {
                     b.Navigation("Case_Requests");
+
+                    b.Navigation("Conversations");
 
                     b.Navigation("Documents");
 

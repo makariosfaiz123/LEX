@@ -31,5 +31,7 @@ namespace LEX.Domain.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<CaseDocument> Documents { get; set; } = new List<CaseDocument>();
+        // Navigation property linking the case to its Firebase conversation metadata
+        public Conversation? Conversation { get; set; }
     }
 }

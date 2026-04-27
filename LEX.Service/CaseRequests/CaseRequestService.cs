@@ -147,7 +147,7 @@ namespace LEX.Service.CaseRequests
                 filterByCaseType = true;
             }
 
-            // 3. بناء الفلتر المجمع (EF Core هيترجم الشروط دي بذكاء للـ SQL)
+            // 3. بناء الفلتر المجمع
             Expression<Func<CaseRequest, bool>> filter = c =>
                 c.LawyerId == lawyerId &&
                 (!filterByStatus || c.Status == statusEnum) &&
@@ -169,6 +169,7 @@ namespace LEX.Service.CaseRequests
                 CaseId = c.Id,
                 ClientName = $"{c.Customer.Fname} {c.Customer.Lname}",
                 CaseType = c.Case_Type.ToString(),
+                Status = c.Status.ToString(), // <-- Mapped the status here
                 Description = c.Description,
                 CreatedAt = c.CreatedAt,
                 Documents = c.Documents.Select(d => d.FileUrl).ToList()
@@ -176,10 +177,10 @@ namespace LEX.Service.CaseRequests
 
             return ServiceResponse<List<LawyerCaseRequestDto>>.SuccessResult(result);
         }
-
         public async Task<ServiceResponse<string>> HandleCaseRequestAsync(int lawyerId, HandleCaseRequestDto dto)
         {
             var caseRepo = _unitOfWork.GetRepository<CaseRequest, int>();
+            var conversationRepo = _unitOfWork.GetRepository<Conversation, int>(); // Get the Conversation repo
 
             var caseRequest = (await caseRepo.GetAsync(
                 c => c.Id == dto.CaseId,
@@ -201,22 +202,40 @@ namespace LEX.Service.CaseRequests
             if (caseRequest.Status != CaseStatus.Pending)
                 return ServiceResponse<string>.Fail("Case already handled");
 
+            string? firebaseChatId = null;
+
             // Accept
             if (dto.IsAccepted)
             {
                 caseRequest.Status = CaseStatus.Accepted;
+
+                // 1. Generate a unique ID for the Firebase chat room
+                firebaseChatId = Guid.NewGuid().ToString();
+
+                // 2. Create the Conversation entity
+                var newConversation = new Conversation
+                {
+                    CaseRequestId = caseRequest.Id,
+                    LawyerId = caseRequest.LawyerId,
+                    CustomerId = caseRequest.CustomerId,
+                    FirebaseChatId = firebaseChatId,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                // 3. Add to repository
+                await conversationRepo.AddAsync(newConversation);
+
                 await _notificationService.AddNotificationAsync(
                     caseRequest.CustomerId,
                     "Request Accepted",
                     $"Your request has been accepted by Dr. {caseRequest.Lawyer.Fname} {caseRequest.Lawyer.Lname}.",
                     NotificationType.Success
                 );
-                //  هنا بعدين هنفتح Chat
-                // ممكن تعمل CreateChat هنا
             }
             else
             {
-                //  Reject
+                // Reject
                 caseRequest.Status = CaseStatus.Rejected;
                 await _notificationService.AddNotificationAsync(
                     caseRequest.CustomerId,
@@ -226,13 +245,12 @@ namespace LEX.Service.CaseRequests
                 );
             }
 
-
-
             caseRepo.Update(caseRequest);
             await _unitOfWork.SaveChangesAsync();
 
+            // Return the FirebaseChatId if accepted, so the mobile app can navigate straight to the chat
             return ServiceResponse<string>.SuccessResult(
-                dto.IsAccepted ? "Case accepted successfully" : "Case rejected"
+                dto.IsAccepted ? firebaseChatId : "Case rejected"
             );
         }
 

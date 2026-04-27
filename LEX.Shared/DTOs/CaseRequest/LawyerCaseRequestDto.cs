@@ -14,6 +14,8 @@ namespace LEX.Shared.DTOs.CaseRequest
 
         public string CaseType { get; set; }
 
+        // Added the Status property
+        public string Status { get; set; }
         public string Description { get; set; }
 
         public DateTime CreatedAt { get; set; }

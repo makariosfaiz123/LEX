@@ -30,5 +30,6 @@ namespace LEX.Service_Abstraction.Authentication
         Task<string> VerifyOtpAsync(VerifyOtpDto dto);
         Task<string> ForgotPasswordAsync(ForgotPasswordDto dto);
         Task<string> ResetPasswordAsync(ResetPasswordDto dto);
+        Task<string> UpdateFcmTokenAsync(int userId, UpdateFcmTokenDto dto);
     }
 }
