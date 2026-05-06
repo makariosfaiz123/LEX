@@ -11,7 +11,13 @@ namespace LEX.Service_Abstraction
 {
     public interface INotificationService
     {
-        Task AddNotificationAsync(int userId, string title, string message, NotificationType type);
+        Task AddNotificationAsync(
+            int userId,
+            string title,
+            string message,
+            NotificationType type,
+            int? caseRequestId = null
+        );
 
         Task<ServiceResponse<List<NotificationDto>>> GetMyNotificationsAsync(int userId);
     }

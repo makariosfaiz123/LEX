@@ -15,5 +15,8 @@ namespace LEX.Service_Abstraction.IAdminService
         Task<ServiceResponse<string>> AcceptLawyerAsync(int lawyerId);
 
         Task<ServiceResponse<string>> RejectLawyerAsync(int lawyerId, string reason);
+
+        Task<ServiceResponse<PendingLawyerDto>> GetLawyerDetailsAsync(int id);
+        Task<ServiceResponse<AdminDashboardDto>> GetDashboardAsync();
     }
 }

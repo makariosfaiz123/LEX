@@ -11,7 +11,11 @@ namespace LEX.Service_Abstraction.CaseRequests
 {
     public interface ICaseRequestService
     {
-        Task<ServiceResponse<string>> CreateCaseAsync(CreateCaseRequestDto dto, int userId);
+        Task<ServiceResponse<string>> CreateCaseAsync(
+                CreateCaseRequestDto dto,
+                int userId,
+                List<(Stream Stream, string FileName)> files
+            );
 
         Task<ServiceResponse<List<LawyerCaseRequestDto>>> GetRequestsForLawyerAsync(int lawyerId,string? status);
 
@@ -19,5 +23,7 @@ namespace LEX.Service_Abstraction.CaseRequests
 
         Task<ServiceResponse<List<CustomerCaseDto>>> GetCustomerCasesAsync(int customerId);
         Task<ServiceResponse<CaseDetailsDto>> GetCaseDetailsForLawyerAsync(int caseId, int lawyerId);
+
+        Task<ServiceResponse<object>> GetCaseDetailsAsync(int caseId, int userId);
     }
 }

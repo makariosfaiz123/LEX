@@ -19,5 +19,6 @@ namespace LEX.Shared.DTOs.Notifications
         public bool IsRead { get; set; }
 
         public DateTime CreatedAt { get; set; }
+        public int? CaseRequestId { get; set; }
     }
 }

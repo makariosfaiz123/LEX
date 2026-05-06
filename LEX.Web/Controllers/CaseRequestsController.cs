@@ -22,11 +22,18 @@ namespace LEX.Web.Controllers
 
         [Authorize(Roles = "Customer")]
         [HttpPost("create-Customer")]
-        public async Task<IActionResult> CreateCase([FromBody] CreateCaseRequestDto dto)
+        public async Task<IActionResult> CreateCase(
+            [FromForm] CreateCaseRequestDto dto,
+            [FromForm] List<IFormFile> files
+        )
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
-            var result = await _caseService.CreateCaseAsync(dto, userId);
+            var mappedFiles = files?
+                .Select(f => (f.OpenReadStream(), f.FileName))
+                .ToList();
+
+            var result = await _caseService.CreateCaseAsync(dto, userId, mappedFiles);
 
             if (!result.Success)
                 return BadRequest(result);
@@ -93,6 +100,20 @@ namespace LEX.Web.Controllers
             var lawyerId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
             var result = await _caseService.GetCaseDetailsForLawyerAsync(id, lawyerId);
+
+            if (!result.Success)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet("Case/{id}")]
+        public async Task<IActionResult> GetCaseById(int id)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+            var result = await _caseService.GetCaseDetailsAsync(id, userId);
 
             if (!result.Success)
                 return NotFound(result);
