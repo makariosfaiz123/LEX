@@ -1,10 +1,4 @@
 ﻿using LEX.Service_Abstraction;
-using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LEX.Service
 {
@@ -14,7 +8,9 @@ namespace LEX.Service
         {
             var newFileName = Guid.NewGuid() + Path.GetExtension(fileName);
 
-            var path = Path.Combine("wwwroot/uploads", newFileName);
+            var folder = Path.Combine("wwwroot", "uploads");
+            Directory.CreateDirectory(folder);
+            var path = Path.Combine(folder, newFileName);
 
             using (var stream = new FileStream(path, FileMode.Create))
             {

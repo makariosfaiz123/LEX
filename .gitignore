@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Runtime uploads (user documents) must never be committed
+LEX.Web/wwwroot/uploads/*
+!LEX.Web/wwwroot/uploads/.gitkeep

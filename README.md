@@ -72,14 +72,32 @@ dotnet run --project LEX.Web
 Then open `/swagger` on the URL printed in the console.
 
 - The connection string lives in `LEX.Web/appsettings.Development.json` (defaults to `(localdb)\MSSQLLocalDB`).
-- Sample customers, lawyers, documents, case requests and reviews are seeded on startup, and an admin account is created on first run (see `LEX.Persistence/Data/DataSeed`).
-- Outgoing email (OTP / password reset) is sent via SMTP from `LEX.Service/Authentication/EmailService.cs`.
+- Sample customers, lawyers, documents, case requests and reviews are seeded on startup (see `LEX.Persistence/Data/DataSeed`).
+
+### 🔑 Configuration & secrets
+
+No secrets are stored in the repository. Set them with [user-secrets](https://learn.microsoft.com/aspnet/core/security/app-secrets) for local development, or with environment variables (`Jwt__Key`, `Email__Password`, ...) in production:
+
+```bash
+cd LEX.Web
+dotnet user-secrets set "Jwt:Key" "<random string, at least 32 characters>"
+
+# SMTP — used for OTP and password-reset emails
+dotnet user-secrets set "Email:Username" "<smtp username>"
+dotnet user-secrets set "Email:Password" "<smtp password or app password>"
+dotnet user-secrets set "Email:From"     "<sender address>"   # optional, defaults to the username
+
+# First admin account — created on first run only if no admin exists yet
+dotnet user-secrets set "Admin:Email"    "<admin email>"
+dotnet user-secrets set "Admin:Password" "<strong password>"
+```
+
+The app refuses to start without `Jwt:Key`, and skips admin seeding (with a console message) if `Admin:Email` / `Admin:Password` are not set. Uploaded files are written to `LEX.Web/wwwroot/uploads/`, which is git-ignored.
 
 ---
 
 ## 🗺️ Roadmap
 
-- Move secrets (JWT signing key, SMTP credentials) out of source into configuration / user-secrets
 - Unit and integration tests
 - Dockerfile and CI pipeline
 

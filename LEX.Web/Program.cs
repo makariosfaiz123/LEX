@@ -1,4 +1,4 @@
-
+﻿
 using LEX.Domain.Interfaces;
 using LEX.Persistence.Data.Context;
 using LEX.Persistence.Data.DataSeed;
@@ -100,6 +100,11 @@ namespace LEX.Web
 
 
 
+            // JWT signing key comes from configuration (user-secrets / environment), never from source
+            var jwtKey = builder.Configuration["Jwt:Key"];
+            if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
+                throw new InvalidOperationException("Missing or too short configuration value 'Jwt:Key' (min 32 characters). Set it with user-secrets or an environment variable.");
+
             //Authorization
             builder.Services.AddAuthentication(options =>
             {
@@ -116,7 +121,7 @@ namespace LEX.Web
                     ValidateIssuerSigningKey = true,
 
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes("THIS_IS_MY_SUPER_SECRET_KEY_1234567890"))
+                        Encoding.UTF8.GetBytes(jwtKey))
                 };
             });
 
@@ -147,7 +152,7 @@ namespace LEX.Web
 
             // Admin Seed
             var context = services.GetRequiredService<AppDbContext>();
-            await AdminSeeder.SeedAsync(context);
+            await AdminSeeder.SeedAsync(context, builder.Configuration);
             #endregion
 
 
